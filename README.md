@@ -1,4 +1,6 @@
 # Laces - Linked Data Viewer
+
+![](./viewer.png)
 ## Getting Started
 
 These are the fundamental technologies used in the infrastructure of the application:
@@ -27,12 +29,16 @@ To be able to build the application you should have NodeJS (with npm)
 and Yarn installed (latest stable versions are preferrable) and be available in your path.
 Then different commands are responsible for following tasks:
 
-| Command                         | Description                                                                                                                                 |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `yarn` or `npm install`         | Installs required packages from NPM repository                                                                                              |
-| `npm run build` or `yarn build` | Builds production ready version, ready for deployment. Result in `dist` folder.                                                             |
-| `npm start` or `yarn start`     | Executes webpack dev web server on `8091` port where you can open the application.                                                          |
-| `npm test` or `yarn test`       | Executes [Karma](https://karma-runner.github.io/) test runner to run unit tests and also generates code coverage report in `reports` folder |
+| Yarn           | NPM             | Description                                                                                                                                 |
+| -------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `yarn install` | `npm install`   | Installs required packages from NPM repository                                                                                              |
+| `yarn build`   | `npm run build` | Builds production ready version, ready for deployment. Result in `dist` folder.                                                             |
+| `yarn start`   | `npm start`     | Executes webpack dev web server on `8091` port where you can open the application.                                                          |
+| `yarn test`    | `npm test`      | Executes [Karma](https://karma-runner.github.io/) test runner to run unit tests and also generates code coverage report in `reports` folder |
+
+## Config
+
+See [Configurations](resources/config/README.md)
 
 ## IDE
 
