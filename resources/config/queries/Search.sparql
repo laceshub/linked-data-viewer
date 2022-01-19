@@ -1,0 +1,49 @@
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:      <http://www.w3.org/2002/07/owl#>
+PREFIX skos:     <http://www.w3.org/2004/02/skos/core#>
+
+#########################
+# This query returns search results.
+#
+# INPUT:
+#   ?searchKey: The phrase to search for
+#########################
+
+SELECT ?group_text ?entry_text ?entry_iri
+WHERE {
+
+  # Search
+  {
+    BIND (IRI(?searchKey) AS ?iri) .
+    ?iri rdfs:label ?label .
+    FILTER (lang(?label) = "en") .
+    BIND (STRLANG("URI found", "en") AS ?group_text) .
+    BIND (1 AS ?order_prio) .
+  } UNION {
+    BIND (IRI(CONCAT(STR(wd:), STR(?searchKey))) AS ?iri) .
+    ?iri rdfs:label ?label .
+    FILTER (lang(?label) = "en") . 
+    BIND (STRLANG("Based on UUID", "en") AS ?group_text) .
+    BIND (2 AS ?order_prio) .
+  } UNION {
+    # exact matches only; full-text search takes too long
+    BIND (STRLANG(?searchKey, "en") AS ?label) .
+    ?iri rdfs:label ?label .
+    BIND (STRLANG("Based on name", "en") AS ?group_text) .
+    BIND (3 AS ?order_prio) .
+  } UNION {
+    # exact matches only; full-text search takes too long
+    BIND (STRLANG(?searchKey, "en") AS ?altLabel) .
+    ?iri skos:altLabel ?altLabel .
+    ?iri rdfs:label ?label .
+    FILTER (lang(?label) = "en") .
+    BIND (STRLANG("Based on synonym", "en") AS ?group_text) .
+    BIND (4 AS ?order_prio) .
+  }
+  FILTER (bound(?group_text)).
+    
+  BIND (?iri AS ?entry_iri) .
+  BIND (COALESCE(?label, REPLACE(str(?iri),"(.*)[//#]","")) AS ?entry_text) .
+}
+ORDER BY ?order_prio ?group_text ?entry_text ?entry_iri

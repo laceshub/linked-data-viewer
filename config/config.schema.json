@@ -1,0 +1,240 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "OTL Viewer app config schema",
+  "type": "object",
+  "properties": {
+    "dataServiceOptions": {
+      "description": "SPARQL endpoint access options",
+      "type": "object",
+      "properties": {
+        "url": {
+          "description": "Url of endpoint",
+          "type": "string"
+        },
+        "mode": {
+          "enum": ["get", "post"]
+        },
+        "auth": {
+          "enum": ["basic", "laces", null]
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": ["url", "mode", "auth"]
+    },
+
+    "queryTerm": {
+      "description": "SPARQL query to load the selected term.",
+      "type": "string",
+      "queryParameters": {
+        "input": {
+          "term_iri": "The IRI of the term"
+        },
+        "output": {
+          "entry_text": "The preferred name to display for the term",
+          "entry_iri": "The IRI of the term",
+          "entry_icon":
+            "The icon associated with the term, provided in the form of a class name that can be styled through CSS (optional)"
+        }
+      }
+    },
+
+    "hierarchies": {
+      "description":
+        "Array of hierarchy configurations. Each hierarchy represent a tree to browse, driven by SPARQL queries",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "properties": {
+          "id": {
+            "description": "Hierarchy identifier; must be unique",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the hierarchy",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon representing the hierarchy",
+            "type": "string"
+          },
+          "queryRoots": {
+            "description": "SPARQL query to load root nodes",
+            "type": "string",
+            "queryParameters": {
+              "output": {
+                "entry_text": "The preferred name to display for the root term",
+                "entry_iri": "The IRI of the root term",
+                "entry_icon":
+                  "The icon associated with the root term, provided in the form of a class name that can be styled through CSS (optional)",
+                "entry_childCount":
+                  "The number of children the root term has in the hierarchy"
+              }
+            }
+          },
+          "queryChildren": {
+            "description": "SPARQL query to load children nodes",
+            "type": "string",
+            "queryParameters": {
+              "input": {
+                "term_iri": "The IRI of the parent term"
+              },
+              "output": {
+                "entry_text":
+                  "The preferred name to display for the child term",
+                "entry_iri": "The IRI of the child term",
+                "entry_icon":
+                  "The icon associated with the child term, provided in the form of a class name that can be styled through CSS (optional)",
+                "entry_childCount":
+                  "The number of children the child term has in the hierarchy"
+              }
+            }
+          },
+          "queryBreadcrumbs": {
+            "description":
+              "SPARQL query to obtain breadcrumb terms towards the input term; the breadcrumb terms should be returned in the order they are found in the hierarchy (i.e., starting with the root term)",
+            "type": "string",
+            "queryParameters": {
+              "input": {
+                "term_iri": "The IRI of the term"
+              },
+              "output": {
+                "entry_text":
+                  "The preferred name to display for the breadcrumb term",
+                "entry_iri": "The IRI of the breadcrumb term",
+                "entry_icon":
+                  "The icon associated with the breadcrumb term, provided in the form of a class name that can be styled through CSS (optional)"
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "queryRoots",
+        "queryChildren",
+        "queryBreadcrumbs"
+      ]
+    },
+
+    "informationPane": {
+      "description": "Configuration for the information pane and its tabs",
+      "type": "object",
+      "properties": {
+        "tabs": {
+          "description":
+            "Array of tab configurations. Each tab represent a UI section driven by a SPARQL query",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "properties": {
+              "type": {
+                "description": "The type of tab.",
+                "enum": ["info", "attributes", "relations", "instances", "map"]
+              },
+              "id": {
+                "description": "Tab identifier; must be unique",
+                "type": "string"
+              },
+              "name": {
+                "description":
+                  "Sets the text which will be displayed on the UI as tab header",
+                "type": "string"
+              },
+              "icon": {
+                "description": "Icon representing the tab",
+                "type": "string"
+              },
+              "query": {
+                "description": "SPARQL query to load data for this tab",
+                "type": "string",
+                "queryParameters": {
+                  "input": {
+                    "term_iri": "The IRI of the term"
+                  },
+                  "output": {
+                    "entry_text":
+                      "The preferred name to display for the item listed",
+                    "entry_iri": "The IRI of the item listed (optional)",
+                    "entry_icon":
+                      "The icon associated with the item listed, provided in the form of a class name that can be styled through CSS (optional)",
+                    "entry_badge":
+                      "The badge of the item listed; typically a string representing cardinality for attributes and relations (optional)",
+                    "group_text":
+                      "The preferred header name for grouping the current entry item (optional)",
+                    "group_iri": "The IRI of the header (optional)",
+                    "group_icon":
+                      "The icon associated with the header, provided in the form of a class name that can be styled through CSS (optional)",
+                    "group_badge": "The badge of the header (optional)"
+                  }
+                }
+              },
+              "object": {
+                "description": "Tab-specific data. In the case of a 'map' type tab using Mapbox, this object should adhere to the structure specified for the 'options' of the Map object (see here: https://docs.mapbox.com/mapbox-gl-js/api/map/), including a valid accessToken.",
+                "type": "object"
+              },
+              "hideIfEmpty": {
+                "description": "Hide tab if data is empty",
+                "type": "boolean",
+                "default": true
+              }
+            },
+            "required": ["type", "id", "name", "query"]
+          }
+        }
+      },
+      "required": ["tabs"]
+    }
+  },
+
+  "startTerm": {
+    "description": "URI of the term that the app will navigate to by default",
+    "type": "string"
+  },
+
+  "queryOTL": {
+    "description": "SPARQL query to load the application version and title",
+    "type": "string",
+    "queryParameters": {
+      "output": {
+        "text": "The preferred name to display for the OTL",
+        "iri": "The IRI of the OTL (optional)",
+        "version": "The version number of the OTL (optional)"
+      }
+    }
+  },
+
+  "subtitleHTML": {
+    "description": "HTML content which will be shown under the application version and title",
+    "type": "string"
+  },
+
+  "querySearch": {
+    "description": "SPARQL query to perform search",
+    "type": "string",
+    "queryParameters": {
+      "input": {
+        "searchKey": "The text to use in searching for a term"
+      },
+      "output": {
+        "entry_text": "The preferred name to display for the search hit listed",
+        "entry_iri": "The IRI of the search hit listed",
+        "group_text": "The preferred header name for grouping the current item"
+      }
+    }
+  },
+
+  "required": [
+    "dataServiceOptions",
+    "queryTerm",
+    "hierarchies",
+    "informationPane",
+    "queryOTL",
+    "querySearch"
+  ]
+}

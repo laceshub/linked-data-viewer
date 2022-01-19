@@ -1,0 +1,40 @@
+PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX spl:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/specifications/>
+PREFIX kos:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/kos/>
+PREFIX shapes: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+SELECT ?entry_text ?entry_iri ?entry_icon
+WHERE {
+
+#########################
+# This query returns the name and icon to a term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+    BIND (?term_iri AS ?entry) .
+    BIND (?term_iri AS ?entry_iri) .
+    
+    # get name
+    OPTIONAL {
+        ?entry shapes:sequence ?sequence .
+        ?sequence owl:annotatedProperty ?individualName .
+        VALUES (?individualName) {(kos:attr-Individual-name) (spl:attr-Individual-name) (spl:attr-Conceptual-name)} .
+        ?sequence rdf:_1 ?entryPreferredLabel .
+    }
+    
+    BIND (if(?entry = spl:ConceptualSpecification, "Specification", if(?entry = kos:IndividualActivity,"Activity",if(?entry = kos:IndividualObject,"Object",if(?entry = kos:IndividualInformationCarrier,"Info Carrier", "Unknown conceptual")))) AS ?entryConceptualLabel ) .
+    BIND (COALESCE(?entryPreferredLabel, ?entryConceptualLabel) AS ?entry_text) .
+    
+    OPTIONAL {
+        ?entry_iri rdf:type ?type .
+        FILTER (?type IN (rdf:Property , owl:ObjectProperty , owl:DatatypeProperty , owl:AnnotationProperty)) .
+        BIND ("icon-term-type" AS ?icon_attr) .
+    }
+    BIND ("icon-term-type" AS ?icon_type) .
+    BIND (COALESCE(?icon_attr, ?icon_rel, ?icon_type) AS ?entry_icon) . 
+}

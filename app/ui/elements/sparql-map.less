@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2018-2022 Semmtech B.V.
+
+.mapboxStyleMenu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    column-gap: 0.3em;
+    justify-content: left;
+    font-family: "Roboto Condensed", sans-serif;
+    font-size: 12px;
+    margin: 10px 0px 0 10px;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 2;
+}
+
+.mapboxStyleMenu > label {
+    display: contents;
+}
+
+.mapboxMap {
+    min-height: 50vh;
+}
+
+.mapboxPopup-divInfo {
+    float: left;
+    padding-right: 0.5em;
+}
+
+.mapboxPopup-divContent {
+    float: right;
+    padding-left: 0.5em;
+    border-left: 1px solid lightgrey;
+}

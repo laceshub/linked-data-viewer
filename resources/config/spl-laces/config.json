@@ -1,0 +1,40 @@
+{
+  "$schema": "./config.schema.json",
+
+  "dataServiceOptions": {
+    "url": "[ENTER ENDPOINT URL HERE]",
+    "mode": "post",
+    "auth": "[CHOOSE BETWEEN basic/laces]",
+    "username": "[ENTER USERNAME HERE]",
+    "password": "[ENTER PASSWORD HERE]"
+  },
+
+  "queryTerm": "url:queries/Subject Name.sparql",
+
+  "hierarchies": [
+    {
+      "id": "hierarchy-taxonomy",
+      "name": "",
+      "queryRoots": "url:queries/Hierarchy (taxonomy) - Roots.sparql",
+      "queryChildren": "url:queries/Hierarchy (taxonomy) - Children.sparql",
+      "queryBreadcrumbs": "url:queries/Hierarchy (taxonomy) - Breadcrumbs.sparql"
+    }
+  ],
+
+  "informationPane": {
+    "tabs": [
+      {
+        "type": "info",
+        "id": "tab-info",
+        "name": "info",
+        "icon": "oi oi-info",
+        "query": "url:queries/Subject Details - Info.sparql",
+        "hideIfEmpty": false
+      }
+    ]
+  },
+
+  "startTerm": "[OPTIONAL: EITHER FILL OR DELETE THIS LINE - ENTER URI FOR THE ITEM TO BE SHOWN WHEN OPENING THE VIEWER]",
+  "querySPL": "url:queries/Dataset Label.sparql",
+  "querySearch": "url:queries/Search.sparql"
+}

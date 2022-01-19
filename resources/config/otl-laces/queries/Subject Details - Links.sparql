@@ -1,0 +1,24 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX otl:  <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX ls:   <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+###################################
+# This query shows links that the user wants to show.
+#
+# INPUT:
+#   ?term_iri: selected item
+###################################
+
+SELECT ?group_text ?entry_iri ?entry_text ?entry_icon
+WHERE {
+    ?term_iri otl:rel-Conceptual-hasExternalLink ?link .
+    ?link  a  otl:ExternalLink .
+    ?link  otl:attr-ExternalLink-relation  ?group_text .
+    ?link  otl:attr-ExternalLink-uri   ?entry_text . ## e.g., "http://ont.cbnl.org/cb/def/CB02225"^^xsd:anyURI .
+    BIND (URI(?entry_text) AS ?entry_iri) .
+    BIND ("oi oi-external-link" AS ?entry_icon) .
+}
+ORDER BY ?group_text ?entry_iri ?entry_text

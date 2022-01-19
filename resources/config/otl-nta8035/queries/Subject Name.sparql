@@ -1,0 +1,33 @@
+PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+PREFIX skos:   <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?entry_text ?entry_iri ?entry_icon
+WHERE {
+
+#########################
+# This query returns the name and icon to a term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+    # Initial BINDs
+    BIND (?term_iri AS ?entry) .
+    BIND (?term_iri AS ?entry_iri) .
+
+    # Get name
+    ?term_iri skos:prefLabel ?entryPreferredLabel .
+    BIND (IF(contains(str(?entry),"#"),strafter(str(?entry), "#"),REPLACE(str(?entry),"(.*)[//]","")) AS ?entryLocalname) .
+    BIND (COALESCE(str(?entryPreferredLabel), ?entryVerificationMethod, ?entryLocalname) AS ?entry_text) .
+    
+    # Get icon
+    OPTIONAL {
+        ?entry_iri rdf:type ?type .
+        FILTER (?type IN (rdf:Property , owl:ObjectProperty , owl:DatatypeProperty , owl:AnnotationProperty)) .
+        BIND ("icon-term-attr" AS ?icon_attr) .
+    }
+    BIND ("icon-term-type" AS ?icon_type) .
+    BIND (COALESCE(?icon_attr, ?icon_rel, ?icon_type) AS ?entry_icon) .    
+}

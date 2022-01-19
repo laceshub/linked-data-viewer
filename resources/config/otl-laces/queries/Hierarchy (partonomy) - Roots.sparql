@@ -1,0 +1,52 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ls:  <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+PREFIX otl: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+
+###################################
+# This query shows the roots of the partonomy.
+#
+# INPUT:
+#   N.A.
+###################################
+
+SELECT  ?entry_text ?entry_iri ?entry_icon (?fakeChildCount AS ?entry_childCount)
+ 
+WHERE {
+
+    # Each root item should be an instance of some sort of conceptual
+    ?root rdf:type ?conceptual .
+    ?conceptual rdfs:subClassOf otl:Conceptual .
+    FILTER (?conceptual NOT IN (otl:InformationType, otl:UnitOfMeasure, otl:Qualification, otl:Aspect))
+    
+    # A root can not be a part of some other concept
+    FILTER NOT EXISTS {
+       	?isWholeFor otl:rel-Relation-from ?child .
+        ?isWholeFor rdf:type/rdfs:subClassOf otl:isWholeFor .
+        ?isWholeFor otl:rel-Relation-to ?root .
+    }
+    
+    BIND (?root AS ?entry_iri) .
+    BIND ("icon-term-type" AS ?entry_icon) .
+    
+    # Find the name of the root
+    ?root ls:sequence ?nameSequence .
+    ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+    ?nameSequence rdf:_1 ?entry_text .
+    
+    # Asess which root children exist
+    OPTIONAL {
+        ?root ls:sequence ?nameSequence .
+        FILTER EXISTS {
+            ?root otl:rel-Conceptual-isSpecializationOf* ?rootPlusGeneralizations .
+            ?childIsWholeFor otl:rel-Relation-from ?rootPlusGeneralizations .
+            ?childIsWholeFor rdf:type/rdfs:subClassOf otl:isWholeFor .
+            ?childIsWholeFor otl:rel-Relation-to ?rootchild .
+        }
+        BIND (1 AS ?fakeChildCount) .
+    }
+
+}
+GROUP BY ?entry_text ?entry_iri ?entry_icon
+ORDER BY ?entry_text ?entry_iri ?entry_childCount

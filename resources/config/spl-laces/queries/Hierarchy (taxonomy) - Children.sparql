@@ -1,0 +1,55 @@
+PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX spl:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/specifications/>
+PREFIX kos:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/kos/>
+PREFIX shapes: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+SELECT ?entry_text ?entry_iri ?entry_icon (COUNT(?grandchild) AS ?entry_childCount) 
+WHERE {
+
+###################################
+# This query shows the children of a node, taking into account that this node can be a top concept or
+#     a lower ranked node of either a specification or a concept (object, activity, info carrier).
+#
+# INPUT:
+#   ?term_iri: The term to search
+###################################
+
+    {
+        # Find children (if the current node is a top conceptual)
+        ?child a ?term_iri .
+        MINUS {?child kos:rel-IndividualConcept-hasBroader ?broaderConcept} .
+    } UNION {
+        # Find children (if the current node is not a top conceptual)
+        {
+            ?child kos:rel-IndividualConcept-hasBroader ?term_iri .
+        } UNION {
+            ?child spl:rel-IndividualSpecification-isClassifiedAs ?term_iri .
+        }
+    }
+    
+    FILTER (isURI(?child)) .
+    BIND (?child AS ?entry) .
+    BIND (?child AS ?entry_iri) .
+    
+    # Find the name of the child (?entry), by using the names-sequences
+    ?entry shapes:sequence ?sequence .
+    ?sequence owl:annotatedProperty ?individualName .
+    VALUES (?individualName) {(kos:attr-Individual-name) (spl:attr-Individual-name) (spl:attr-Conceptual-name)} .
+    ?sequence rdf:_1 ?entry_text .
+
+    BIND ("icon-term-type" AS ?entry_icon) .
+    
+    # Find children of children
+    OPTIONAL {
+        {
+            ?grandchild kos:rel-IndividualConcept-hasBroader ?child .
+        } UNION {
+            ?grandchild spl:rel-IndividualSpecification-isClassifiedAs ?child .
+        }
+    }
+}
+GROUP BY ?entry_text ?entry_iri ?entry_icon
+ORDER BY ?entry_text ?entry_iri ?entry_childCount

@@ -1,0 +1,139 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX otl:  <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX ls:   <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+###################################
+# This query presents information details of the selected item
+#
+# INPUT:
+#   ?term_iri: the selected item 
+###################################
+
+SELECT ?group_text ?entry_iri ?entry_text ?entry_icon
+WHERE {
+  {
+    {
+        BIND (1 AS ?sequence) .
+        BIND ("Synonyms" AS ?group_text) .
+    
+        ?term_iri otl:attr-Conceptual-name ?synonym .
+        MINUS {
+           ?term_iri ls:sequence ?nameSequence .
+           ?nameSequence rdf:_1 ?synonym .
+           ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+        }
+    
+        BIND (?synonym AS ?entry_text) .
+    }
+    UNION
+    {
+        BIND (2 AS ?sequence) .
+        BIND ("Description" AS ?group_text) .
+        ?term_iri otl:attr-Conceptual-description ?description .
+        BIND (?description as ?entry_text) .
+        BIND (IF(LANG(?entry_text)="",?null,CONCAT("flag-icon flag-icon-", LANG(?entry_text))) AS ?entry_icon) .
+    }
+    UNION
+    {
+           BIND (3 AS ?sequence) .
+        BIND ("Details" AS ?group_text) .
+        BIND (?term_iri AS ?output_selector) .
+        
+        {
+            SELECT DISTINCT ?output_selector ?informationType
+            WHERE {
+                    BIND (?term_iri AS ?output_selector)
+                    ?output_selector otl:rel-Conceptual-isSpecializationOf*/otl:rel-Conceptual-isDescribedIn ?informationField .
+                    ?informationField otl:rel-InformationField-isClassifiedAs ?informationType .
+            }
+        }
+        ?informationType ls:sequence ?nameSequence .
+        ?nameSequence rdf:_1 ?information_type_name .
+        ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+        
+        BIND (?information_type_name as ?entry_text) .
+        BIND (IF(LANG(?entry_text)="",?null,CONCAT("flag-icon flag-icon-", LANG(?entry_text))) AS ?entry_icon) .
+    }
+    UNION 
+    {
+        BIND (4 AS ?sequence) .
+        BIND ("Aspect" AS ?group_text) .
+        
+        ?aspect_relation otl:rel-Relation-from ?term_iri .
+        ?aspect_relation otl:rel-Relation-to ?aspect .
+        ?aspect_relation rdf:type ?aspect_relation_type .
+        
+        VALUES (?aspect_relation_type) {
+            (otl:GeometricalSpace-hasAspect-Aspect)
+            (otl:PhysicalObject-hasAspect-Aspect)
+        }
+        
+        ?aspect ls:sequence ?nameSequence .
+        ?nameSequence rdf:_1 ?aspect_name .
+        ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+        
+        BIND (?aspect_name as ?entry_text) .
+        BIND (?aspect as ?entry_iri) .
+        BIND (IF(LANG(?entry_text)="",?null,CONCAT("flag-icon flag-icon-", LANG(?entry_text))) AS ?entry_icon) .
+    }
+    UNION
+    {
+        BIND (5 AS ?sequence) .
+        BIND ("Is an aspect of:" AS ?group_text) .
+        ?aspect_relation otl:rel-Relation-from ?object .
+        ?aspect_relation otl:rel-Relation-to ?term_iri .
+        ?aspect_relation rdf:type ?aspect_relation_type .
+        
+        VALUES (?aspect_relation_type) {
+            (otl:GeometricalSpace-hasAspect-Aspect)
+            (otl:PhysicalObject-hasAspect-Aspect)
+        }
+        
+        ?object ls:sequence ?nameSequence .
+        ?nameSequence rdf:_1  ?object_name .
+        ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+        
+        BIND (?object_name as ?entry_text) .
+        BIND (?object as ?entry_iri) .
+        BIND (IF(LANG(?entry_text)="",?null,CONCAT("flag-icon flag-icon-", LANG(?entry_text))) AS ?entry_icon) .
+    }
+    UNION
+    {
+        BIND (6 AS ?sequence) .
+        BIND ("Unit:" AS ?group_text) .
+        BIND (?term_iri AS ?inner_iri)
+        
+        {
+            SELECT DISTINCT ?unit_name ?inner_iri
+            WHERE {
+                BIND (?term_iri AS ?inner_iri)
+                #?aspect_relation2 otl:rel-Relation-from ?object2 .
+                ?aspect_relation2 otl:rel-Relation-to ?inner_iri .
+                ?aspect_relation2 otl:rel-Relation-toRole ?aspect_role .
+                ?aspect_relation2 rdf:type ?aspect_relation_type2 .
+                
+                VALUES (?aspect_relation_type2) {
+                    (otl:GeometricalSpace-hasAspect-Aspect)
+                    (otl:PhysicalObject-hasAspect-Aspect)
+                }
+                
+                ?aspect_role otl:rel-RoleOfAspect-PossessedAspect-isQualifiedAs-Quantification/otl:rel-Quantification-isQuantifiedOnScale ?unit .
+                
+                ?unit rdf:type otl:UnitOfMeasure .
+                ?unit ls:sequence ?nameSequence .
+                ?nameSequence rdf:_1 ?unit_name .
+                ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+            }
+            LIMIT 1
+        }
+        
+        BIND (?unit_name as ?entry_text) .
+        BIND (IF(LANG(?entry_text)="",?null,CONCAT("flag-icon flag-icon-", LANG(?entry_text))) AS ?entry_icon) .
+    }
+
+  }
+}
+ORDER BY ?sequence ?entry_icon  ?entry_text

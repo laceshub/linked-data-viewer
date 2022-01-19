@@ -1,0 +1,67 @@
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:      <http://www.w3.org/2002/07/owl#>
+PREFIX xsd:      <http://www.w3.org/2001/XMLSchema#>
+PREFIX otl:      <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX shapes:   <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+#########################
+# This query returns the partonomy breadcrumbs to a term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+SELECT ?entry_text ?entry_iri ?entry_icon ?root_iri (COUNT(DISTINCT ?ancestor) AS ?entry_ancestorDistance)
+WHERE {
+
+    {
+        SELECT  ?term_iri (SAMPLE(?root) AS ?root_iri)
+        WHERE {
+            # Each root item should be an instances of some sort of conceptual
+            ?root rdf:type ?conceptual .
+            ?conceptual rdfs:subClassOf otl:Conceptual .
+            FILTER (?conceptual NOT IN (otl:InformationType, otl:UnitOfMeasure, otl:Qualification, otl:Aspect))
+            
+            # A root can not be a part of some other concept
+            FILTER NOT EXISTS {
+               	?isWholeFor otl:rel-Relation-from ?child .
+                ?isWholeFor rdf:type/rdfs:subClassOf otl:isWholeFor .
+                ?isWholeFor otl:rel-Relation-to ?root .
+            }
+            FILTER EXISTS {
+                ?term_iri (^otl:rel-Relation-to/otl:rel-Relation-from)* ?root .
+                ?root a ?rootType .
+                ?term_iri a ?termType .
+                FILTER (?rootType = ?termType ) .
+            }
+        }
+        GROUP BY ?term_iri
+        ORDER BY ?root
+    }
+    
+    # Find all parents of ?term_iri and bind as ?entry_iri
+    ?term_iri (^otl:rel-Relation-to/otl:rel-Relation-from)* ?entry .
+    ?entry (^otl:rel-Relation-to/otl:rel-Relation-from)* ?root_iri .
+    ?entry a ?entryType .
+    ?term_iri a ?termType .
+    FILTER (?entryType = ?termType ) .
+    BIND (?entry AS ?entry_iri) .
+    
+    # get primary name from shapes:sequence
+    ?entry shapes:sequence ?entrySequence .
+    ?entrySequence rdf:_1 ?sequenceName .
+    BIND (?sequenceName AS ?entry_text) .
+    
+    # pattern to assess which ancestors exist
+    OPTIONAL {
+        ?term_iri (^otl:rel-Relation-to/otl:rel-Relation-from)+ ?ancestor .
+        ?ancestor (^otl:rel-Relation-to/otl:rel-Relation-from)* ?entry_iri .
+    }  
+    
+    # Add icon text for LD viewer 
+    BIND ("icon-term-type" AS ?entry_icon) .
+
+}
+GROUP BY ?entry_text ?entry_iri ?entry_icon ?root_iri
+ORDER BY DESC(?entry_ancestorDistance) ?entry_text ?entry_iri ?entry_icon

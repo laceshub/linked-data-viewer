@@ -1,0 +1,27 @@
+﻿{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "sourceMap": true,
+    "inlineSourceMap": false,
+    //"emitDecoratorMetadata": true,
+    //"experimentalDecorators": true,
+    "removeComments": false,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "skipLibCheck": true, // This is to allow some inconsistencies in 3rd party definitions. Should be checked if it is possible to disable when updating definitions
+    //"noUnusedLocals": true,
+    //"noUnusedParameters": true,
+    "pretty": true,
+    "jsx": "react",
+    "types": ["mocha"],
+    "lib": ["dom", "es2017"],
+    "importHelpers": true
+  },
+  "exclude": ["node", "node_modules", "content", "dist", "reports"]
+}

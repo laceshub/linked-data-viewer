@@ -1,0 +1,63 @@
+PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX spl:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/specifications/>
+PREFIX kos:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/kos/>
+PREFIX shapes: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+    
+SELECT ?entry_text ?entry_iri ?entry_icon (COUNT(DISTINCT ?ancestor) AS ?entry_ancestorDistance)
+WHERE {
+
+#########################
+# This query returns the taxonomy breadcrumbs to a term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+    {
+        # Find the children (hasBroader for Individual concepts, or isClassifiedAs for Specifications) and bind as ?entry_iri
+        {
+            ?term_iri kos:rel-IndividualConcept-hasBroader/kos:rel-IndividualConcept-hasBroader* ?entry .
+            BIND (?entry AS ?entry_iri) .
+            # pattern to assess which ancestors exist
+            OPTIONAL {
+                ?term_iri kos:rel-IndividualConcept-hasBroader/kos:rel-IndividualConcept-hasBroader* ?ancestor .
+                ?ancestor kos:rel-IndividualConcept-hasBroader* ?entry_iri .
+            }
+        } UNION {
+            ?term_iri spl:rel-IndividualSpecification-isClassifiedAs* ?entry .
+            BIND (?entry AS ?entry_iri) .
+            # pattern to assess which ancestors exist
+            OPTIONAL {
+                ?term_iri spl:rel-IndividualSpecification-isClassifiedAs/spl:rel-IndividualSpecification-isClassifiedAs* ?ancestor .
+                ?ancestor spl:rel-IndividualSpecification-isClassifiedAs* ?entry_iri .
+            }
+        }
+        
+        # get primary name from shapes:sequence
+        ?entry shapes:sequence ?entrySequence .
+        ?entrySequence rdf:_1 ?sequenceName .
+        ?entrySequence owl:annotatedProperty  ?individualName .
+        VALUES (?individualName) {(kos:attr-Individual-name) (spl:attr-Individual-name) (spl:attr-Conceptual-name)} .
+        BIND (?sequenceName AS ?entry_text) .
+          
+    } UNION {
+        # Get top conceptual and its label
+        ?term_iri a ?top_concept .
+#        ?top_concept rdfs:label ?top_concept_label .
+        ##### rdfs:label cannot be accessed from imported ontologies by LD viewer. Remove the next line when this is fixed
+        ##### also uncomment the two lines in this block that are commented #####
+        BIND (if(?top_concept = spl:IndividualSpecification, "Specification", if(?top_concept = kos:IndividualActivity,"Activity",if(?top_concept = kos:IndividualObject,"Object",if(?top_concept = kos:IndividualInformationCarrier,"Info Carrier","Unknown conceptual")))) AS ?entry_text ) .
+        
+        # Bind the top conceptual as ?entry_iri. If it is a IndividualSpecification, then change it to ConceptualSpecification  
+        BIND (if(?top_concept = spl:IndividualSpecification, spl:ConceptualSpecification, ?top_concept) AS ?entry_iri) .
+#        BIND (str(?top_concept_label) AS ?entry_text) .
+    }
+
+    # Add icon text for LD viewer 
+    BIND ("icon-term-type" AS ?entry_icon) .
+}
+GROUP BY ?top_concept ?entry_text ?entry_iri ?entry_icon
+ORDER BY DESC(?top_concept) DESC(?entry_ancestorDistance) ?entry_text ?entry_iri ?entry_icon

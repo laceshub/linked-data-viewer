@@ -1,0 +1,54 @@
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX schema: <http://schema.org/>
+
+#########################
+# This query returns certain information on a given term.
+# Name, description, etc.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+SELECT DISTINCT ?group_iri ?group_text ?entry_iri ?entry_text ?entry_icon
+WHERE {
+  ?term_iri ?property ?object .
+  
+  # include only statements with literals when they have the English language flag
+  FILTER (isIRI(?object) || (isLiteral(?object) && (lang(?object) IN ("", "en")))) .
+  # include only statements with Wikidata properties when they are /prop/direct/
+  FILTER (!STRSTARTS(STR(?property), "http://www.wikidata.org/") || CONTAINS(STR(?property), "/prop/direct/")) .
+
+  # get names recorded in knowledge graph
+  OPTIONAL {
+    ?property rdfs:label ?propertyLabel .
+    FILTER (lang(?propertyLabel) = "en") .
+  }
+  OPTIONAL {
+    ?object rdfs:label ?objectLabel .
+    FILTER (lang(?objectLabel) = "en") .
+  }
+  
+  # property labels are not available through endpoint,
+  # so assign most common property labels used in Wikidata here
+  BIND ((IF (?property = wdt:P31, "instance of",
+         IF (?property = wdt:P279, "subclass of",
+         IF (?property = wdt:P1269, "facet of", ?blank))))
+        AS ?recognisedPropertyLabel) .
+  
+  # indicate preferred, non-alphabetic order for the following properties 
+  BIND ((IF (?property = wdt:P31, 1, # "instance of"
+         IF (?property = wdt:P279, 2, # "subclass of"
+         IF (?property = wdt:P1269, 3, # "facet of" 
+         IF (?property = rdfs:label, 4,
+         IF (?property = schema:description, 5,
+         ?blank))))))
+        AS ?order_prio) .
+  
+  BIND (?property AS ?group_iri) .
+  BIND (COALESCE(?recognisedPropertyLabel, ?propertyLabel, REPLACE(str(?property),"(.*)[//#]","")) AS ?group_text) .
+  BIND (IF(isIRI(?object), ?object, ?blank) AS ?entry_iri) .
+  BIND (IF(isIRI(?object), COALESCE(?objectLabel, REPLACE(str(?object),"(.*)[//#]","")), ?object) AS ?entry_text) .
+}
+ORDER BY DESC(BOUND(?order_prio)) ?order_prio ?group_text ?group_iri ?entry_text ?entry_iri

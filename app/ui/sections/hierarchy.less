@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2018-2022 Sander Stolk and Semmtech B.V.
+
+.hierarchy {
+    .tree-stub {
+        display: inline-block;
+        width: 12px;
+    }
+    a {
+        color: black;
+    }
+    td {
+        padding: 0px 5px;
+        border: none;
+    }
+    .text-item-icon {
+        margin-right: 6px;
+    }
+
+    .row-expander {
+        cursor: pointer;
+        &.is-expanded {
+            i {
+                transform: rotate(90deg);
+            }
+        }
+    }
+    .oi-chevron-right {
+        font-size: 10px;
+    }
+}

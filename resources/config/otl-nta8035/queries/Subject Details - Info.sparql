@@ -1,0 +1,110 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX vs:   <http://www.w3.org/2003/06/sw-vocab-status/ns#>
+PREFIX base: <https://w3id.org/def/basicsemantics-owl#>
+
+SELECT DISTINCT ?group_text ?group_iri ?entry_iri ?entry_text ?entry_icon
+WHERE {
+
+#########################
+# This query returns certain information on a given term.
+# Name, description, etc.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+    {
+        ?term_iri ?p ?o .
+        FILTER (?p != base:hasPart) .
+        FILTER (?o != owl:Class) .
+    } UNION {
+        ?o ?p ?term_iri .
+    }
+        
+    BIND (IF (?p IN (rdf:type), "Type", 
+          IF (?p IN (rdfs:label, skos:prefLabel), "Name", 
+          IF (?p IN (skos:altLabel), "Synonym", 
+          IF (?p IN (skos:notation), "Code",
+          IF (?p IN (skos:example), "Example",
+          IF (?p IN (rdfs:comment, skos:definition), "Definition", 
+          IF (?p IN (base:abbreviation), "Abbreviation", 
+          IF (?p IN (rdfs:domain), "Always applied from", 
+          IF (?p IN (rdfs:range), "Always leads to", 
+          IF (?p IN (vs:term_status), "Status",
+          IF (?p IN (owl:oneOf), "Possible values",
+          IF (?p IN (rdf:value), "Text",
+          IF (?p IN (skos:scopeNote), "Scope note",
+          IF (?p IN (base:describes), "Describes",
+          IF (?p IN (rdfs:subClassOf), "Subclass of",
+          IF (?p IN (base:transforms), "Transforms",
+          IF (?p IN (rdfs:subPropertyOf), "Subproperty of",
+          IF (?p IN (skos:member), "is contained in", ?empty))))))))))))))))))
+          AS ?textPropertyRecognized) .
+
+    OPTIONAL {
+        ?p skos:prefLabel ?textPropertyFound .
+    }
+
+    BIND (COALESCE(?textPropertyRecognized, ?textPropertyFound) AS ?group_text) .
+    BIND (?p AS ?group_iri) .
+
+    {
+        ?term_iri ?p ?o .
+        FILTER (isLiteral(?o)) .
+        BIND (?o AS ?entry_text) .
+        BIND (IF(!LANG(?o),"",CONCAT("flag-icon flag-icon-", LANG(?o))) AS ?entry_icon) .
+    } 
+    UNION
+    {
+        ?term_iri ?p ?o .
+        FILTER (isIRI(?o) && !isBlank(?o) && ?p != owl:oneOf) .
+        OPTIONAL {
+            ?o skos:prefLabel ?oLabel .
+            FILTER(LANG(?oLabel)="en"||LANG(?oLabel)="") .
+            BIND(STR(?oLabel) AS ?textObjectFound ) .
+        }
+        BIND (IF(contains(str(?o),"#"),strafter(str(?o), "#"),REPLACE(str(?o),"(.*)[//]","")) AS ?textObjectLocalname) .
+        BIND (COALESCE(?textObjectFound, ?textObjectLocalname) AS ?entry_text) .
+        BIND (?o AS ?entry_iri) .
+    }
+    UNION
+    {
+        ?term_iri owl:oneOf ?o .
+        ?value a ?term_iri .
+        ?value skos:prefLabel ?valueName .
+        BIND (?value AS ?entry_iri) .
+        BIND (?valueName AS ?entry_text) .
+    }
+    UNION
+    {
+        ?term_iri ?p ?bnode .
+        ?bnode <https://schema.org/unitText> ?unit .
+        ?bnode rdf:value ?value .
+        BIND(CONCAT(?value," ",?unit) AS ?entry_text) .
+    }
+
+    BIND (IF (?group_text = "Type", 1, 
+          IF (?group_text = "Name", 2, 
+          IF (?group_text = "Code", 3,
+          IF (?group_text = "Text", 4,
+          IF (?group_text = "Definition", 6,
+          IF (?group_text = "Example", 7,
+          IF (?group_text = "Abbreviation", 8,
+          IF (?group_text = "Synonym", 9, 
+          IF (?group_text = "Subclass of", 10,
+          IF (?group_text = "Subproperty of", 11,
+          IF (?group_text = "Possible values", 12,
+          IF (?group_text = "Describes", 13,
+          IF (?group_text = "Transforms", 14,
+          IF (?group_text = "Scope note", 15,
+          IF (?group_text = "Referred standard", 16,
+          IF (?group_text = "Owner", 17,
+          IF (?group_text = "Always applied from", 19,
+          IF (?group_text = "Always leads to", 20,
+          IF (?group_text = "Status", 21, 22)))))))))))))))))))
+          AS ?sequence) .
+}
+ORDER BY ?sequence ?group_text ?entry_text ?entry_iri ?entry_icon

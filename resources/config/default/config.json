@@ -1,0 +1,52 @@
+{
+  "$schema": "./config.schema.json",
+
+  "dataServiceOptions": {
+    "url": "https://query.wikidata.org/sparql",
+    "mode": "get",
+    "auth": null
+  },
+
+  "queryTerm": "url:queries/Subject Name.sparql",
+
+  "hierarchies": [
+    {
+      "id": "hierarchy-decomposition",
+      "name": "Taxonomy",
+      "queryRoots": 
+        "url:queries/Hierarchy (taxonomy) - Roots.sparql",
+      "queryChildren":
+        "url:queries/Hierarchy (taxonomy) - Children.sparql",
+      "queryBreadcrumbs":
+        "url:queries/Hierarchy (taxonomy) - Breadcrumbs.sparql"
+    }
+  ],
+
+  "informationPane": {
+    "tabs": [
+      {
+        "type": "info",
+        "id": "tab-info",
+        "name": "info",
+        "icon": "oi oi-info",
+        "query": "url:queries/Subject Details - Info.sparql",
+        "hideIfEmpty": false
+      },
+      {
+        "type": "map",
+        "id": "tab-map",
+        "name": "map",
+        "icon": "oi oi-map-marker",
+        "query": "url:queries/Subject Details - Map.sparql",
+        "object": { 
+          "accessToken":  "<INSERT: MAPBOX ACCESS TOKEN>",
+          "center": [-83.5, 34.21],
+          "zoom": 0
+        }
+      }
+    ]
+  },
+
+  "queryOTL": "url:queries/Dataset Label.sparql",
+  "querySearch": "url:queries/Search.sparql"
+}

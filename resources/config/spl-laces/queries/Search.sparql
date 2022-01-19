@@ -1,0 +1,47 @@
+PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+PREFIX skos:   <http://www.w3.org/2004/02/skos/core#>
+PREFIX spl:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/specifications/>
+PREFIX kos:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/kos/>
+PREFIX shapes: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+SELECT ?group_text ?entry_text ?entry_iri ?sequenceName
+WHERE {
+
+###################################
+# This query performs a search
+#
+# INPUT:
+#   ?searchKey: The term to search
+###################################
+
+    # Find any entry in the SPL that has both an IRI and a type (and bind its IRI to ?entry_iri)
+    ?entry rdf:type ?type .
+    FILTER (isIRI(?entry)) .
+    BIND (?entry AS ?entry_iri) .
+    
+    # Find all names (synonyms) for the entry. This way of searching ensures that only  
+    # individuals are searched, concepts that are part of the schema have an rdfs:label.
+    ?entry shapes:sequence ?sequence .
+    ?sequence owl:annotatedProperty ?individualName .
+    VALUES (?individualName) {(kos:attr-Individual-name) (spl:attr-Individual-name) (spl:attr-Conceptual-name)} .
+    ?sequence ?seqPred ?sequenceName .
+    FILTER (STRSTARTS(STR(?seqPred), STR(rdf:_))) .
+    
+    # Check if any of the synonyms matches the search string
+    FILTER (CONTAINS(lcase(str(?sequenceName)), lcase(str(?searchKey)))) .
+    BIND (STRLANG("Based on name", "en") AS ?group_text) .
+    BIND (1 AS ?group_priority) .
+    
+    FILTER (bound(?group_text)).
+    
+    # Get the preferred name of the entry and bind to ?entry_text
+    ?entry shapes:sequence ?sequence .
+    ?sequence owl:annotatedProperty ?individualName .
+    VALUES (?individualName) {(kos:attr-Individual-name) (spl:attr-Individual-name) (spl:attr-Conceptual-name)} .
+    ?sequence rdf:_1 ?entryPreferredLabel .
+    BIND (?entryPreferredLabel AS ?entry_text) .
+}
+ORDER BY ?group_priority ?group_text ?entry_text ?entry_iri
+LIMIT 11

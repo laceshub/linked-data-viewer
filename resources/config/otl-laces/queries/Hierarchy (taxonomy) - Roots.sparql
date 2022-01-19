@@ -1,0 +1,38 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ls:  <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+PREFIX otl: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+
+###################################
+# This query shows the roots of the taxonomy.
+#
+# INPUT:
+#   N.A.
+###################################
+
+SELECT  ?entry_text ?entry_iri ?entry_icon (?fakeChildCount AS ?entry_childCount)
+WHERE {
+
+    VALUES ?root { otl:PhysicalObject otl:Activity otl:Function otl:Aspect otl:GeometricalSpace otl:Document  }
+    
+    BIND (?root AS ?entry) .
+    BIND (?root AS ?entry_iri) .
+    BIND ("icon-term-type" AS ?entry_icon) .
+    
+    # Entry-texts are hardcoded because labels are in a different dataset
+    BIND(IF(?root = otl:PhysicalObject, "Physical Object", 
+         IF(?root = otl:GeometricalSpace, "Geometrical Space",
+         IF(contains(str(?root),"#"),strafter(str(?root), "#"),REPLACE(str(?root),"(.*)[//]",""))))   # obtains localname
+         AS ?entry_text) .
+    
+    # pattern to assess which root children exist
+    OPTIONAL {
+        FILTER EXISTS {
+            ?child a ?root .
+        }
+        BIND (1 AS ?fakeChildCount) .
+    }
+
+}
+ORDER BY ?entry_text ?entry_iri ?entry_childCount

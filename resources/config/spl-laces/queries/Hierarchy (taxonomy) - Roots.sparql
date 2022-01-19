@@ -1,0 +1,41 @@
+PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+PREFIX skos:   <http://www.w3.org/2004/02/skos/core#>
+PREFIX spl:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/specifications/>
+PREFIX kos:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/kos/>
+PREFIX shapes: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+SELECT ?entry_text ?entry_iri ?entry_icon (COUNT(DISTINCT ?rootchild) AS ?entry_childCount) 
+WHERE {
+
+#########################
+# This query returns the root nodes of the SPL (name + IRI + icon),
+#         as well as the total number of children of each root.
+#
+# INPUT:
+#   NONE
+#########################
+
+    # Find the Specification (under spl:Conceptual) and other roots (under kos:IndividualConcept)
+    {
+        ?root rdfs:subClassOf spl:Conceptual .
+        FILTER (?root = spl:ConceptualSpecification) .
+    } UNION {
+        ?root rdfs:subClassOf kos:IndividualConcept .
+    }
+    
+    # bind the iri and icon
+    BIND (?root AS ?entry) .
+    BIND (?root AS ?entry_iri) .
+    BIND ("icon-term-type" AS ?entry_icon) .
+
+    BIND (if(?root = spl:ConceptualSpecification, "Specification", if(?root = kos:IndividualActivity,"Activity",if(?root = kos:IndividualObject,"Object",if(?root = kos:IndividualInformationCarrier,"Info Carrier", "Unknown conceptual")))) AS ?entry_text ) .
+    
+    # Find all children (if any exist)
+    OPTIONAL {
+        ?rootchild spl:rel-IndividualSpecification-isClassifiedAs*/rdf:type ?root .
+    }
+}
+GROUP BY ?entry_text ?entry_iri ?entry_icon
+ORDER BY ?entry_text ?entry_iri ?entry_childCount

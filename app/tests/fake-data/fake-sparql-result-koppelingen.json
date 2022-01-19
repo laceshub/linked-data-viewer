@@ -1,0 +1,103 @@
+{
+  "head": {
+    "vars": [
+      "col1_name_Relatie",
+      "col2_name_Object",
+      "col2_value",
+      "col3_name_Via",
+      "col3_value"
+    ]
+  },
+  "results": {
+    "bindings": [
+      {
+        "col1_name_Relatie": {
+          "type": "literal",
+          "value": "is connected to"
+        },
+        "col2_name_Object": {
+          "type": "literal",
+          "value": "1N315HW229028"
+        },
+        "col2_value": {
+          "type": "literal",
+          "value": "1N315HW229028"
+        },
+        "col3_name_Via": {
+          "type": "literal",
+          "value": "1N325WK02MOV010.melding dicht"
+        },
+        "col3_value": {
+          "type": "literal",
+          "value": "1N325WK02MOV010.melding dicht"
+        }
+      },
+      {
+        "col1_name_Relatie": {
+          "type": "literal",
+          "value": "is connected to"
+        },
+        "col2_name_Object": {
+          "type": "literal",
+          "value": "1N315HW229028"
+        },
+        "col2_value": {
+          "type": "literal",
+          "value": "1N315HW229028"
+        },
+        "col3_name_Via": {
+          "type": "literal",
+          "value": "1N325WK02MOV010.melding open"
+        },
+        "col3_value": {
+          "type": "literal",
+          "value": "1N325WK02MOV010.melding open"
+        }
+      },
+      {
+        "col1_name_Relatie": {
+          "type": "literal",
+          "value": "is connected to"
+        },
+        "col2_name_Object": {
+          "type": "literal",
+          "value": "1N315HW231028"
+        },
+        "col2_value": {
+          "type": "literal",
+          "value": "1N315HW231028"
+        },
+        "col3_name_Via": {
+          "type": "literal",
+          "value": "1N325WK02MOV010.sturing dicht"
+        },
+        "col3_value": {
+          "type": "literal",
+          "value": "1N325WK02MOV010.sturing dicht"
+        }
+      },
+      {
+        "col1_name_Relatie": {
+          "type": "literal",
+          "value": "is connected to"
+        },
+        "col2_name_Object": {
+          "type": "literal",
+          "value": "1N315HW231028"
+        },
+        "col2_value": {
+          "type": "literal",
+          "value": "1N315HW231028"
+        },
+        "col3_name_Via": {
+          "type": "literal",
+          "value": "1N325WK02MOV010.sturing open"
+        },
+        "col3_value": {
+          "type": "literal",
+          "value": "1N325WK02MOV010.sturing open"
+        }
+      }
+    ]
+  }
+}

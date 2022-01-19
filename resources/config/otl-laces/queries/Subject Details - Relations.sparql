@@ -1,0 +1,61 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX otl:  <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX ls:   <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+###################################
+# This query shows relations that the user wants to show. They are partly hard-coded.
+#
+# INPUT:
+#   ?term_iri: selected item
+#   values for the variable ?subject_relation_type (hardcoded)
+###################################
+
+SELECT ?group_text ?entry_iri ?entry_text ?entry_icon
+WHERE {
+
+    # Relations are selected in this part. 
+    ?subject_relation rdf:type ?subject_relation_type .
+    ?subject_relation otl:rel-Relation-from|otl:rel-Relation-to ?term_iri .
+    ?subject_relation otl:rel-Relation-from|otl:rel-Relation-to ?object .
+    FILTER(?object != ?term_iri) . # elements cannot relate to themselves
+    
+    # possible / preferred relationtypes can be added into the list below            
+    VALUES ?subject_relation_type {
+        otl:PhysicalObject-isPerformerOf-Function 
+        otl:PhysicalObject-isLocatedAt-GeometricalSpace
+    }
+    
+    # look up the name of the item, not synonyms    
+    ?object ls:sequence ?nameSequence .
+    ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+    ?nameSequence rdf:_1 ?entry_text .
+
+    BIND (?object as ?entry_iri) .
+    BIND ("icon-term-type" AS ?entry_icon) .
+  
+      # for the chosen relations, give the caption for the relation (group_text)
+    OPTIONAL{
+           BIND ("Performs function:" AS ?group_text) . 
+        FILTER(?subject_relation_type = otl:PhysicalObject-isPerformerOf-Function) .
+        ?subject_relation otl:rel-Relation-from ?term_iri .
+    }
+    OPTIONAL{
+           BIND ("Is performed by:" AS ?group_text) . 
+        FILTER(?subject_relation_type = otl:PhysicalObject-isPerformerOf-Function) .
+        ?subject_relation otl:rel-Relation-to ?term_iri .
+    }
+    OPTIONAL{
+           BIND ("Is located at:" AS ?group_text) . 
+        FILTER(?subject_relation_type = otl:PhysicalObject-isLocatedAt-GeometricalSpace) .
+        ?subject_relation otl:rel-Relation-from ?term_iri .
+    }
+    OPTIONAL{
+           BIND ("Is location for:" AS ?group_text) . 
+        FILTER(?subject_relation_type = otl:PhysicalObject-isLocatedAt-GeometricalSpace) .
+        ?subject_relation otl:rel-Relation-to ?term_iri .
+    }
+}
+ORDER BY ?group_text ?entry_iri ?entry_text

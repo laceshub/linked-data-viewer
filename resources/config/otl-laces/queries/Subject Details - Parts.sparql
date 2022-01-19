@@ -1,0 +1,47 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX owl:  <http://www.w3.org/2002/07/owl#> 
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#> 
+PREFIX otl:  <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/> 
+PREFIX ls:   <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/> 
+
+SELECT ?group_text ?entry_text ?entry_iri ?entry_icon
+WHERE {
+
+###################################
+# This query shows the parts of the selected item
+#
+# INPUT:
+#   ?item_iri: selected item
+###################################
+
+    # caption of the relation
+    BIND ("Has as part:" AS ?group_text) .
+    
+    ?term_iri otl:rel-Conceptual-isSpecializationOf* ?whole .
+    
+    ?whole_for_relation otl:rel-Relation-from ?whole .
+    ?whole_for_relation otl:rel-Relation-to ?whole_for .
+    ?whole_for_relation rdf:type ?whole_for_relation_type .
+    
+    # The part below should replace the VALUES part below when imported datasets can be queried, too.
+    # ?whole_for_relation_type rdfs:subClassOf otl:isWholeFor .
+    
+    # possible roots are hardcoded and can be added manually
+    VALUES (?whole_for_relation_type) {
+        (otl:PhysicalObject-isWholeFor-PhysicalObject)
+        (otl:GeometricalSpace-isWholeFor-GeometricalSpace)
+        (otl:Activity-isWholeFor-Activity)
+        (otl:Function-isWholeFor-Function) # This should also be included
+        }
+    
+    BIND (?whole_for AS ?entry) .
+    BIND (?whole_for AS ?entry_iri) .
+    BIND ("icon-term-type" AS ?entry_icon) .
+    
+    # look up the name of the item, not synonyms
+    ?entry ls:sequence ?nameSequence .
+    ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+    ?nameSequence rdf:_1 ?entry_text .
+}
+ORDER BY ?group_text ?group_iri ?entry_text ?entry_iri

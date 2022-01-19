@@ -1,0 +1,5 @@
+SELECT ("Wikidata" AS ?text)
+WHERE {
+  ?s ?p ?o .
+}
+LIMIT 1

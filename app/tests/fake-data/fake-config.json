@@ -1,0 +1,94 @@
+{
+  "$schema": "../../../config/config.schema.json",
+  "dataServiceOptions": {
+    "url": "http://demo2.semmweb.com/fake",
+    "mode": "post",
+    "auth": null,
+    "username": "",
+    "password": ""
+  },
+  "documentFileServerBaseUrl": "http://demo.semmweb.com/files/fake",
+  "rootUri": "http://www.semmweb.com/repository/ns/root-fake-object",
+  "layoutTitle": "Fake page",
+  "blocks": [
+    {
+      "id": "documenten-block",
+      "name": "Documenten",
+      "type": "sparql-table",
+      "position": "right",
+      "showHeaders": true,
+      "query": "url:queries/Documenten.sparql",
+      "columns": [
+        {
+          "name": "Type",
+          "type": "text",
+          "textVariable": "col1_name_Type"
+        },
+        {
+          "name": "Naam",
+          "type": "documentLink",
+          "textVariable": "col2_name_Naam",
+          "linkVariable": "col2_value"
+        },
+        {
+          "name": "Omschrijving",
+          "type": "text",
+          "textVariable": "col3_name_Omschrijving"
+        }
+      ]
+    },
+    {
+      "id": "koppelingen-block",
+      "name": "Koppelingen",
+      "type": "sparql-table",
+      "position": "right",
+      "showHeaders": true,
+      "query": "url:queries/Koppelingen.sparql",
+      "columns": [
+        {
+          "type": "text",
+          "name": "Relatie",
+          "nowrap": true,
+          "textVariable": "col1_name_Relatie"
+        },
+        {
+          "type": "objectLink",
+          "name": "Object",
+          "textVariable": "col2_name_Object",
+          "linkVariable": "col2_value"
+        },
+        {
+          "type": "text",
+          "name": "Via",
+          "textVariable": "col3_name_Via"
+        }
+      ]
+    },
+    {
+      "id": "process-tree-block",
+      "name": "Proces",
+      "type": "sparql-tree",
+      "position": "left",
+      "showHeaders": false,
+      "hideIfNoData": true,
+      "query": "url:queries/Proces_roots.sparql",
+      "queryForChildren": "url:queries/Proces_children.sparql",
+      "levelsToExpand": 4,
+      "expandUriVariable": "node_value",
+      "expandChildrenCountVariable": "node_childCount",
+      "columns": [
+        {
+          "name": "Object",
+          "type": "objectLink",
+          "textVariable": "node_name",
+          "linkVariable": "node_value"
+        },
+        {
+          "name": "Type",
+          "type": "text",
+          "textVariable": "col1_name_Type"
+        }
+      ]
+    }
+  ]
+}

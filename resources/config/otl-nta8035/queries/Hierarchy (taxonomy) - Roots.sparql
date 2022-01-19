@@ -1,0 +1,42 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX base: <https://w3id.org/def/basicsemantics-owl#>
+
+SELECT ?entry_text ?entry_iri ?entry_icon (COUNT(DISTINCT ?rootchild) AS ?entry_childCount)
+WHERE {
+
+#########################
+# This query returns the root nodes for the tree containing
+# the taxonomy of concepts (but a partonomy for Activity).
+#########################
+
+    VALUES ?root {
+        base:Activity
+        base:PhysicalObject
+        base:InformationObject
+    }    
+    ?root skos:prefLabel ?label .
+    
+    OPTIONAL{
+        {
+            # If activity, do not show taxonomy
+            ?rootchild rdfs:subClassOf ?root .
+            FILTER(?root != base:Activity) .
+        } UNION {
+            # if activity, show partonomy
+            base:Activity rdfs:subClassOf ?restriction .
+            ?restriction a owl:Restriction .
+            ?restriction owl:onProperty base:hasPart .
+            ?restriction owl:onClass ?rootchild .
+        }
+    }
+    
+    FILTER (LANG(?label)="en"||LANG(?label)="") .
+    BIND(STR(?label) AS ?entry_text) .
+    BIND(?root AS ?entry_iri) .
+    BIND("icon-term-type" AS ?entry_icon) .
+}
+GROUP BY ?entry_text ?entry_iri ?entry_icon
+ORDER BY ?entry_text ?entry_iri ?entry_childCount

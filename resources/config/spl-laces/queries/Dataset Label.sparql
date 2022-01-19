@@ -1,0 +1,33 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX spl:  <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/specifications/>
+
+SELECT ?iri ?text
+WHERE {
+
+#########################
+# This query returns the iri and name (label) of the SPL.
+#
+# INPUT:
+#   NONE
+#########################
+
+    # Find all Ontologies
+    ?ontology rdf:type owl:Ontology .
+    
+    # To find the base ontology, filter out all ontologies that are imported by another ontology
+    FILTER NOT EXISTS {
+        ?other_ontology owl:imports ?ontology .
+    }
+    
+    # To exclude rdf/rdfs/owl, filter out ontologies that have the w3c site in their URI
+    FILTER(!contains(str(?ontology),"www.w3.org"))
+    
+    # Find label of the specifications library. Bind to ?spl_name.
+    ?ontology rdfs:label ?spl_name .
+    FILTER(lang(?spl_name) = "")
+
+    BIND ( str(?spl_name) AS ?text) . 
+    BIND ( ?ontology AS ?iri) .
+}

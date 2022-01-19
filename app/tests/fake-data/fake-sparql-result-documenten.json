@@ -1,0 +1,36 @@
+{
+  "head": {
+    "link": [],
+    "vars": [
+      "col1_name_Type",
+      "col2_name_Naam",
+      "col2_value",
+      "col3_name_Omschrijving"
+    ]
+  },
+  "results": {
+    "distinct": false,
+    "ordered": true,
+    "bindings": [
+      {
+        "col1_name_Type": {
+          "type": "literal",
+          "value": "GH"
+        },
+        "col2_name_Naam": {
+          "type": "literal",
+          "value": "G00034.doc"
+        },
+        "col2_value": {
+          "type": "uri",
+          "value":
+            "/5/items/Cantorion_sheet_music_collection/81dbccf2dcf6a63d8dcd51ac0a85a570.pdf"
+        },
+        "col3_name_Omschrijving": {
+          "type": "literal",
+          "value": "Gebruikershandleiding Filtraatpompstation"
+        }
+      }
+    ]
+  }
+}

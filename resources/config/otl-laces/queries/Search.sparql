@@ -1,0 +1,45 @@
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:      <http://www.w3.org/2002/07/owl#>
+PREFIX skos:     <http://www.w3.org/2004/02/skos/core#>
+PREFIX otl:		 <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX ls:	 <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+###################################
+# This query performs a search on both names and synonyms, and returns the item's preferred name
+#
+# INPUT:
+#   ?searchKey: The term to search
+###################################
+
+SELECT DISTINCT *    # '*' used as triplestore fix for selection of ?group_text ?entry_text ?entry_iri ?sequenceName
+WHERE {
+
+    {
+        ?entry a ?type .
+        OPTIONAL {
+            ?entry otl:attr-Conceptual-code ?code .
+        }
+        FILTER (?entry = URI(ENCODE_FOR_URI(?searchKey))) .
+        BIND (true AS ?exactMatch) .
+        BIND (STRLANG("Based on identifier", "en") AS ?group_text) .
+    } UNION {
+        ?entry otl:attr-Conceptual-name ?name . 
+        FILTER (CONTAINS(lcase(str(?name)), lcase(str(?searchKey)))) .
+        BIND (STRLANG("Based on term", "en") AS ?group_text) .
+    }
+    
+    ?entry a ?type .
+    
+    OPTIONAL {
+        ?entry ls:sequence ?sequence .
+        ?sequence owl:annotatedProperty otl:attr-Conceptual-name .
+        ?sequence rdf:_1 ?entryPreferredLabel .
+    }
+    
+    BIND (?entry AS ?entry_iri) .
+    BIND (COALESCE(?entryPreferredLabel, ?name, IF(contains(str(?entry),"#"),strafter(str(?entry), "#"),REPLACE(str(?entry),"(.*)[//]",""))) AS ?entry_text) .
+    BIND (STRLEN(?entry_text) AS ?entry_text_length) .
+
+}
+ORDER BY DESC(?exactMatch) ?group_text ?entry_text_length ?entry_text ?entry_iri

@@ -1,0 +1,58 @@
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:      <http://www.w3.org/2002/07/owl#>
+PREFIX skos:     <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?entry_text ?entry_iri ?entry_icon (COUNT(DISTINCT ?ancestor) AS ?entry_ancestorDistance)
+WHERE {
+
+#########################
+# This query returns the taxonomy breadcrumbs to a term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+    ?term_iri rdfs:subClassOf* ?entry .
+    BIND (?entry AS ?entry_iri) .
+    
+    # filter excluding owl:Thing
+    FILTER (?entry != owl:Thing) .
+    
+    # filter excluding blank nodes
+    FILTER (isURI(?entry)) .
+
+    # filter excluding Restrictions as nodes
+    FILTER NOT EXISTS {
+        ?entry rdf:type/rdfs:subClassOf* owl:Restriction .
+    }
+    
+    # get name
+    OPTIONAL {
+      ?entry skos:prefLabel ?entryPreferredLabel .
+      FILTER(LANG(?entryPreferredLabel) != "nl") .
+    }
+    OPTIONAL {
+      ?entry skos:prefLabel ?entryDutchLabel .
+      FILTER(LANG(?entryDutchLabel) = "nl") .
+    }
+    BIND (IF(contains(str(?entry),"#"),strafter(str(?entry), "#"),REPLACE(str(?entry),"(.*)[//]","")) AS ?entryLocalname) .
+    BIND (COALESCE(?entryPreferredLabel, ?entryDutchLabel, ?entryLocalname) AS ?entry_text) .
+
+    
+    OPTIONAL {
+        ?entry_iri rdf:type ?type .
+        FILTER (?type IN (rdf:Property , owl:ObjectProperty , owl:DatatypeProperty , owl:AnnotationProperty)) .
+        BIND ("icon-term-attr" AS ?icon_attr) .
+    }
+    BIND ("icon-term-type" AS ?icon_type) .
+    BIND (COALESCE(?icon_attr, ?icon_rel, ?icon_type) AS ?entry_icon) . 
+
+    # pattern to assess which ancestors exist
+    OPTIONAL {
+        ?term_iri rdfs:subClassOf/rdfs:subClassOf* ?ancestor .
+        ?ancestor rdfs:subClassOf* ?entry_iri .
+    }
+}
+GROUP BY ?entry_text ?entry_iri ?entry_icon
+ORDER BY DESC(?entry_ancestorDistance) ?entry_text ?entry_iri ?entry_icon

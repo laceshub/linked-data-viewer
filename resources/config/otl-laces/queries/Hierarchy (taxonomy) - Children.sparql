@@ -1,0 +1,47 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX otl: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX ls: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/> 
+
+###################################
+# This query shows children, taking into account that they can be either specialisations or types of the root
+#
+# INPUT:
+#   ?term_iri: The term to search
+###################################
+
+SELECT ?entry_text ?entry_iri ?entry_icon (?fakeChildCount AS ?entry_childCount)
+WHERE {
+
+    # children can be types of the root (top-level children), or specialisations of these top-level children
+    ?child a|otl:rel-Conceptual-isSpecializationOf ?term_iri . 
+    FILTER NOT EXISTS { 
+        ?child a ?term_iri .
+        FILTER (!STRSTARTS(STR(?term_iri), STR(otl:))) .
+    }
+    FILTER NOT EXISTS { 
+        ?child rdf:type ?term_iri .
+        ?child otl:rel-Conceptual-isSpecializationOf ?firstelement .
+    }
+    
+    # we're only interested in the preferred name, not synonyms
+    ?child ls:sequence ?nameSequence .
+    ?nameSequence owl:annotatedProperty otl:attr-Conceptual-name .
+    ?nameSequence rdf:_1 ?entry_text .
+    BIND (?child AS ?entry_iri) .
+    
+    # pattern to assess the existence of grandchildren
+    OPTIONAL {
+        ?child ls:sequence ?nameSequence .
+        FILTER EXISTS {
+            ?grandchild otl:rel-Conceptual-isSpecializationOf ?child .
+        }
+        BIND (1 AS ?fakeChildCount) .
+    }
+    
+    BIND ("icon-term-type" AS ?entry_icon) .
+
+}
+ORDER BY ?entry_text ?entry_iri ?entry_childCount

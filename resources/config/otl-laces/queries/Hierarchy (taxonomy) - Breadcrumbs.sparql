@@ -1,0 +1,60 @@
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:      <http://www.w3.org/2002/07/owl#>
+PREFIX xsd:      <http://www.w3.org/2001/XMLSchema#>
+PREFIX otl:      <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX shapes:   <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+#########################
+# This query returns the taxonomy breadcrumbs to a term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+SELECT ?entry_text ?entry_iri ?entry_icon ?top_concept (COUNT(DISTINCT ?ancestor) AS ?entry_ancestorDistance)
+WHERE {
+
+    {
+        # Find all parents of ?term_iri and bind as ?entry_iri
+        ?term_iri otl:rel-Conceptual-isSpecializationOf* ?entry .
+        BIND (?entry AS ?entry_iri) .
+        
+        # filter excluding blank nodes (obsolete?)
+        FILTER (isURI(?entry)) .
+        
+        # get name for entry
+        OPTIONAL {
+            ?entry shapes:sequence ?entrySequence .
+            ?entrySequence rdf:_1 ?sequenceName .
+        }
+        BIND (IF(contains(str(?entry),"#"),strafter(str(?entry), "#"),REPLACE(str(?entry),"(.*)[//]","")) AS ?entryLocalname) .
+        BIND (COALESCE(?sequenceName, ?entryLocalname) AS ?entry_text) .
+        
+        # pattern to assess which ancestors exist
+        OPTIONAL {
+            ?term_iri otl:rel-Conceptual-isSpecializationOf/otl:rel-Conceptual-isSpecializationOf* ?ancestor .
+            ?ancestor otl:rel-Conceptual-isSpecializationOf* ?entry_iri .
+        }  
+    } UNION {
+        # Get top conceptual
+        ?term_iri a ?top_concept .
+        
+        # Get name -- in cases where laces otl schema is not part of queried endpoint
+        BIND (IF(?top_concept = otl:PhysicalObject, "Physical object", 
+              IF(?top_concept = otl:GeometricalSpace, "Geometrical space",
+              (IF(contains(str(?top_concept),"#"),strafter(str(?top_concept), "#"),REPLACE(str(?top_concept),"(.*)[//]","")))   # obtains localname
+              )) AS ?entry_text ) .
+        
+        # Get name -- in cases where laces otl schema is part of queried endpoint
+        # ?top_concept rdfs:label ?entry_text .
+        
+        BIND (?top_concept AS ?entry_iri) .	
+    }
+    
+    # Add icon text for LD viewer 
+    BIND ("icon-term-type" AS ?entry_icon) .
+
+}
+GROUP BY ?top_concept ?entry_text ?entry_iri ?entry_icon
+ORDER BY DESC(?top_concept) DESC(?entry_ancestorDistance) ?entry_text ?entry_iri ?entry_icon

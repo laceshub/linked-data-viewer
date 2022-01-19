@@ -1,0 +1,68 @@
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:      <http://www.w3.org/2002/07/owl#>
+PREFIX skos:     <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?group_text ?entry_text ?entry_iri
+WHERE {
+
+# This query performs a search
+#
+# INPUT:
+#   ?searchKey: The term to search
+
+    {
+        BIND (IRI(?searchKey) AS ?uri) .
+        ?uri rdf:type ?type .
+        FILTER (?uri=IRI(?searchKey)) .
+        BIND (STRLANG("URI found", "en") AS ?group_text) .
+        BIND (1 AS ?group_priority) .
+    } UNION {
+        ?uri rdf:type ?type .
+        BIND (IF(contains(str(?uri),"#"),strafter(str(?uri), "#"),REPLACE(str(?uri),"(.*)[//]","")) AS ?uriLocalname) .
+        FILTER (?searchKey = ?uriLocalname) .
+        BIND (STRLANG("Based on UUID", "en") AS ?group_text) .
+        BIND (2 AS ?group_priority) .
+    } UNION {
+        ?uri rdfs:label|skos:prefLabel ?label .
+        FILTER (CONTAINS(lcase(?label), lcase(?searchKey))) .
+        BIND (STRLANG("Based on name", "en") AS ?group_text) .
+        BIND (3 AS ?group_priority) .
+    } UNION {
+        ?uri rdfs:comment|skos:definition ?definition .
+        FILTER (CONTAINS(lcase(?definition), lcase(?searchKey))) .
+        BIND (STRLANG("Based on definition", "en") AS ?group_text) .
+        BIND (4 AS ?group_priority) .
+    } UNION {
+        ?uri skos:notation ?code .
+        FILTER (CONTAINS(lcase(?code), lcase(?searchKey))) .
+        BIND (STRLANG("Based on code", "en") AS ?group_text) .
+        BIND (5 AS ?group_priority) .
+    } UNION {
+        ?uri skos:altLabel ?altLabel .
+        FILTER (CONTAINS(lcase(str(?altLabel)), lcase(?searchKey))) .
+        BIND (STRLANG("Based on synonym", "en") AS ?group_text) .
+        BIND (6 AS ?group_priority) .
+    }
+    FILTER (bound(?group_text)).
+
+    ?uri rdf:type ?type .
+    FILTER (isIRI(?uri)) .
+    
+    BIND (?uri AS ?entry) .
+    BIND (?uri AS ?entry_iri) .
+    
+    # get entry name
+    OPTIONAL {
+      ?entry skos:prefLabel ?entryPreferredLabel .
+      FILTER(LANG(?entryPreferredLabel) != "nl") .
+    }
+    OPTIONAL {
+      ?entry skos:prefLabel ?entryDutchLabel .
+      FILTER(LANG(?entryDutchLabel) = "nl") .
+    }
+    BIND (IF(contains(str(?entry),"#"),strafter(str(?entry), "#"),REPLACE(str(?entry),"(.*)[//]","")) AS ?entryLocalname) .
+    BIND (COALESCE(?entryPreferredLabel, ?entryDutchLabel, ?entryLocalname) AS ?entry_text) .
+
+}
+ORDER BY ?group_priority ?group_text ?entry_text ?entry_iri

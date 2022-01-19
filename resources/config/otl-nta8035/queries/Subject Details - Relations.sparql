@@ -1,0 +1,81 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX base: <https://w3id.org/def/basicsemantics-owl#>
+
+SELECT DISTINCT ?group_text ?group_iri ?entry_text ?entry_iri ?entry_icon ?entry_badge
+WHERE {
+
+#########################
+# This query returns certain relations for a given concept.
+#
+# INPUT:
+#   ?term_iri: The IRI of the concept
+#########################
+
+    {
+        BIND(?term_iri AS ?input) .
+        ?input rdfs:subClassOf/(rdfs:subClassOf*) ?restriction .
+        ?restriction owl:onProperty ?relation .
+        ?restriction a owl:Restriction .
+        FILTER (?relation NOT IN ( skos:notation , skos:prefLabel , rdf:value , skos:definition)) .
+        FILTER NOT EXISTS {
+            ?relation rdfs:range base:QuantityValue
+        }
+        FILTER NOT EXISTS {
+            ?restriction owl:onClass base:PhysicalObject
+        }
+        FILTER NOT EXISTS {
+            ?restriction owl:onProperty base:hasPart .
+            ?restriction owl:onClass base:Activity
+        }
+        FILTER NOT EXISTS {
+            ?relation rdfs:range/rdfs:subClassOf base:EnumerationType
+        }
+        OPTIONAL {
+            ?relation rdfs:range ?range .
+        }
+        OPTIONAL {
+            ?restriction owl:onClass ?range .
+        }
+
+        BIND (?relation AS ?group) .
+        BIND (?relation AS ?group_iri) .
+        FILTER NOT EXISTS {
+            ?relation rdf:type/rdfs:subClassOf* owl:DatatypeProperty .
+        }
+        FILTER NOT EXISTS {
+            ?relation rdf:type/rdfs:subClassOf* owl:AnnotationProperty .
+        }
+        FILTER (!STRSTARTS(str(?range),"http://www.w3.org/2001/XMLSchema#")) .
+        BIND (?range AS ?entry) .
+    } UNION {
+        BIND(?term_iri AS ?input2) .
+        ?range2 rdfs:subClassOf ?restriction2 .
+        ?restriction2 a owl:Restriction .
+        ?restriction2 owl:onProperty base:describes .
+        ?restriction2 owl:onClass ?input2 .
+        BIND(base:describes AS ?group) .
+        BIND(base:describes AS ?group_iri) .
+        BIND (?range2 AS ?entry) .
+    }
+    BIND (IF(!bound(?entry),?invalid,?entry) AS ?entry_iri) .
+    BIND (IF(!bound(?entry),"(not specified)",?invalid) AS ?noEntryName) .
+    BIND (IF(contains(str(?entry),"#"),strafter(str(?entry), "#"),REPLACE(str(?entry),"(.*)[//]","")) AS ?entryLocalname) .
+    # get name
+    OPTIONAL {    ?entry skos:prefLabel ?entryLabel .
+                FILTER (LANG(?entryLabel) != "nl") .
+             }
+    BIND (COALESCE(?noEntryName, ?entryLabel, ?entryLocalname) AS ?entry_text) .
+    
+    # get group name
+    OPTIONAL {    ?group skos:prefLabel ?groupLabel .
+                FILTER (LANG(?groupLabel) != "nl") .
+             }
+    BIND (IF(contains(str(?group),"#"),strafter(str(?group), "#"),REPLACE(str(?group),"(.*)[//]","")) AS ?groupLocalname) .
+    BIND (COALESCE(?groupLabel, ?groupLocalname) AS ?group_text) .
+
+    BIND ("icon-term-type" AS ?entry_icon) .
+}
+ORDER BY ?group_text ?group_iri ?entry_text ?entry_iri

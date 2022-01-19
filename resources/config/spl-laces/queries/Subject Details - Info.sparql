@@ -1,0 +1,114 @@
+PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:    <http://www.w3.org/2002/07/owl#>
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX spl:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/specifications/>
+PREFIX kos:    <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/kos/>
+PREFIX shapes: <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+SELECT ?group_text ?entry_iri ?entry_text ?entry_icon
+WHERE {
+
+###################################
+# This query presents information details of the selected item
+#
+# INPUT:
+#   ?term_iri: the selected item 
+###################################
+
+    {
+        BIND (1 AS ?sequence) .
+        BIND ("Synonyms" AS ?group_text) .
+    
+        ?term_iri spl:attr-Conceptual-name ?synonym .
+        MINUS {?term_iri shapes:sequence ?nameSequence .
+         ?nameSequence rdf:_1 ?synonym .
+         ?nameSequence owl:annotatedProperty ?individualName .
+         VALUES (?individualName) {(kos:attr-Individual-name) (spl:attr-Individual-name) (spl:attr-Conceptual-name)}
+         }
+    
+        BIND (?synonym AS ?entry_text) .
+    }
+    UNION
+    {
+        BIND (2 AS ?sequence) .
+        BIND ("Description" AS ?group_text) .
+        ?term_iri spl:attr-Conceptual-description ?description .
+        BIND (?description as ?entry_text) .
+        BIND (IF(LANG(?entry_text)="",?null,CONCAT("flag-icon flag-icon-", LANG(?entry_text))) AS ?entry_icon) .
+    }
+    UNION
+    {
+           BIND (3 AS ?sequence) .
+        BIND ("Attribute" AS ?group_text) .
+        BIND (?term_iri AS ?output_selector)
+        
+        {
+            SELECT DISTINCT ?output_selector ?information_type_name
+            WHERE {
+                    BIND (?term_iri AS ?output_selector)
+                    ?output_selector spl:rel-IndividualSpecification-isDescribedIn_InformationField ?informationField .
+                    ?informationField kos:rel-InformationField-isClassifiedAs ?informationType .
+                    ?informationField kos:attr-InformationField-value ?informationValue .
+                    ?informationType kos:attr-Conceptual-name ?informationCaption .
+                    BIND ( concat(str(?informationCaption),": ",str(?informationValue)) AS ?information_type_name)
+            }                    
+        }
+        
+        BIND (?information_type_name as ?entry_text) .
+        #BIND (IF(LANG(?entry_text)="",?null,CONCAT("flag-icon flag-icon-", LANG(?entry_text))) AS ?entry_icon) .
+        
+    }
+    UNION
+    {
+        BIND (4 AS ?sequence) .
+        BIND ("Specification text" AS ?group_text) .
+        ?term_iri spl:rel-IndividualSpecification-isDescribedIn ?specificationText .
+        ?specificationText spl:attr-IndividualSpecificationText-status spl:enum-IndividualSpecificationText-status-Current .
+        ?specificationText spl:attr-IndividualSpecificationText-textBody ?specificationTextBody .
+        BIND (?specificationTextBody AS ?entry_text) .
+    }
+    UNION
+    {
+        BIND (5 AS ?sequence) .
+        BIND ("Subjects" AS ?group_text) .
+        ?term_iri spl:rel-IndividualSpecification-isRelatedTo_IndividualConcept ?subject .
+        ?subject shapes:sequence ?subjectSequence .
+        ?subjectSequence rdf:_1 ?subjectSequenceName .
+        ?subjectSequence owl:annotatedProperty kos:attr-Individual-name .
+        BIND (?subjectSequenceName AS ?entry_text) .
+        BIND (?subject AS ?entry_iri) .
+    }
+    UNION
+    {
+        BIND (6 AS ?sequence) .
+        BIND ("Organization" AS ?group_text) .
+        ?term_iri spl:rel-IndividualSpecification-isSubmittedBy ?organization .
+        ?organization shapes:sequence ?organizationSequence .
+        ?organizationSequence rdf:_1 ?organizationSequenceName .
+        ?organizationSequence owl:annotatedProperty spl:attr-Individual-name .
+        BIND (?organizationSequenceName AS ?entry_text) .
+    }
+    UNION
+    {
+        BIND (7 AS ?sequence) .
+        BIND ("Verifications" AS ?group_text) .
+        ?term_iri spl:rel-IndividualSpecification-isVerifiedBy ?verification .
+        ?verification shapes:sequence ?verificationSequence .
+        ?verification spl:attr-Conceptual-description ?verificationValue .
+        ?verificationSequence rdf:_1 ?verificationSequenceName .
+        ?verificationSequence owl:annotatedProperty spl:attr-Conceptual-name .
+        BIND ( concat(str(?verificationSequenceName),": ",str(?verificationValue)) AS ?entry_text) .
+    }
+    UNION
+    {
+        BIND (8 AS ?sequence) .
+        BIND ("Phases" AS ?group_text) .
+        ?term_iri spl:rel-IndividualSpecification-isApplicableInTheContextOf ?phase .
+        ?phase shapes:sequence ?phaseSequence .
+        ?phaseSequence rdf:_1 ?phaseSequenceName .
+        ?phaseSequence owl:annotatedProperty spl:attr-Conceptual-name.
+        BIND (?phaseSequenceName AS ?entry_text) .
+    }
+}
+ORDER BY ?sequence ?entry_icon  ?entry_text

@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright © 2018-2022 Sander Stolk and Semmtech B.V.
+
+.tab-relations {
+    .badge {
+        margin: 0px 0px 0px 5px;
+    }
+    .sparql-listing {
+        margin-top: 16px;
+    }
+    .sparql-listing-entry {
+        color: black;
+        a {
+            color: black;
+        }
+        // overriding .list-group-item:first-child
+        border-top-left-radius: 0rem;
+        border-top-right-radius: 0rem;
+    }
+    .sparql-listing-group {
+        a {
+            color: white;
+        }
+
+        border-bottom-width: 0px;
+
+        /* Possible improvement: Inherit or reuse the CSS below from the bootstrap classes indicated */
+        // .list-group-item
+        position: relative;
+        display: block;
+        padding: 0.75rem 1.25rem;
+        margin-bottom: -1px;
+        background-color: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        // .list-group-item:first-child
+        border-top-left-radius: 0.25rem;
+        border-top-right-radius: 0.25rem;
+        // .bg-secondary
+        background-color: #868e96 !important;
+        // .text-white
+        color: #fff !important;
+    }
+
+    .list-group-item:first-child {
+        border-top-width: 0px;
+    }
+}

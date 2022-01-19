@@ -1,0 +1,30 @@
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:      <http://www.w3.org/2002/07/owl#>
+PREFIX otl:      <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+
+SELECT ?iri ?text ?version
+WHERE {
+
+	# Find all Ontologies
+	?ontology rdf:type owl:Ontology .
+	
+	# To find the base ontology, filter out all ontologies that are imported by another ontology
+	FILTER NOT EXISTS {
+		?other_ontology owl:imports ?ontology .
+	}
+	
+	# To exclude rdf/rdfs/owl, filter out ontologies that have the w3c site in their URI
+	FILTER(!contains(str(?ontology),"www.w3.org"))
+	
+  	OPTIONAL {
+		# Find label of the ontology
+		?ontology rdfs:label ?ontologyLabel .
+  	}
+  
+	BIND (?ontology AS ?iri) .
+	BIND (REPLACE(replace(str(?ontology), "[/#]$", ""),"(.*)[//]","") AS ?ontologyLocalname) .
+  	BIND (COALESCE(?ontologyLabel, ?ontologyLocalname, "Ontology") AS ?text) .
+}
+ORDER BY ?ontology
+LIMIT 1

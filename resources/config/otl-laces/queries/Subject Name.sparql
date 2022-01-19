@@ -1,0 +1,45 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+PREFIX otl:  <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/otl-manager/>
+PREFIX ls:   <http://www.laces.tech/publication/ns/semmtech/live/laces/schema/shapes/>
+
+SELECT ?entry_text ?entry_iri ?entry_icon
+WHERE {
+
+#########################
+# This query returns the name and icon to a term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+    BIND (?term_iri AS ?entry) .
+    BIND (?term_iri AS ?entry_iri) .
+    
+    # get name
+    OPTIONAL {
+        ?entry ls:sequence ?sequence .
+        ?sequence owl:annotatedProperty otl:attr-Conceptual-name .
+        ?sequence rdf:_1 ?entryPreferredLabel .
+    }
+    OPTIONAL {
+        # ?entry rdfs:label ?entryConceptualLabel .
+        # Preferred way (rdfs:label) will work only if imported datasets can be queried at the endpoint too
+        BIND (IF(?entry = otl:PhysicalObject, "Physical object", 
+              IF(?entry = otl:GeometricalSpace, "Geometrical space",
+              (IF(contains(str(?entry),"#"),strafter(str(?entry), "#"),REPLACE(str(?entry),"(.*)[//]","")))   # obtains localname
+              )) AS ?entryLabel ) .
+    }
+    BIND (COALESCE(?entryPreferredLabel,?entryLabel) AS ?entry_text) .
+    
+    OPTIONAL {
+        ?entry_iri rdf:type ?type .
+        FILTER (?type IN (rdf:Property , owl:ObjectProperty , owl:DatatypeProperty , owl:AnnotationProperty)) .
+        BIND ("icon-term-type" AS ?icon_attr) .
+    }
+    
+    BIND ("icon-term-type" AS ?icon_type) .
+    BIND (COALESCE(?icon_attr, ?icon_rel, ?icon_type) AS ?entry_icon) . 
+}

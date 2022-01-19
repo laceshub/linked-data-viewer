@@ -1,0 +1,50 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Unit Tests</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mocha@latest/mocha.css" />
+</head>
+
+<body>
+    <div id="mocha"></div>
+    <script src="https://cdn.jsdelivr.net/npm/mocha@latest/mocha.js"></script>
+    <script>
+        function getParameterByName(name) {
+            var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+            return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+        }
+
+        var mochaOpts = {
+            ui: 'bdd',
+            timeout: 2000
+        };
+
+        /**
+         * Here we parse 'wait' parameter from query string
+         * Then we execute tests after specified milliseconds passed
+         * This is for purpose of debugger to establish attach before tests are starting to execute.
+         * Explanation:
+         * Used with VSCode when launch command is configured to 'tests?wait=1000'
+         * In this case VSCode will start browser with specified url, then it will attach the debugger.
+         * In this scenario waiting a bit allows to pospone tests until debugger is not attached.
+         */
+        var wait = parseInt(getParameterByName('wait') || "0", 10);
+        if (wait > 0) {
+            // we expect debugging evironment, so we also set the timeout setting to 10 minutes
+            mochaOpts.timeout = 1000 * 60 * 10;
+        }
+
+        mocha.setup(mochaOpts);
+    </script>
+</body>
+
+<script>
+    console.log('wait ' + wait);
+    setTimeout(function () {
+        console.log('mocha options: ', mochaOpts)
+        mocha.run();
+    }, wait);
+</script>
+
+</html>

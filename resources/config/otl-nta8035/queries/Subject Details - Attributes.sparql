@@ -1,0 +1,62 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX base: <https://w3id.org/def/basicsemantics-owl#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?entry_text ?entry_iri ?entry_badge
+WHERE {
+
+#########################
+# This query returns attributes for a given concept.
+#
+# INPUT:
+#   ?term_iri: The IRI of the concept
+#########################
+
+    ?term_iri rdfs:subClassOf/(rdfs:subClassOf*) ?restriction .
+    ?restriction owl:onProperty ?attribute .
+    OPTIONAL {
+        ?restriction <https://schema.org/unitText> ?unitText .
+    }
+    OPTIONAL { # get min
+        ?restriction owl:minCardinality|owl:minQualifiedCardinality ?minC .
+    }
+    OPTIONAL { # get max
+        ?restriction owl:maxCardinality|owl:maxQualifiedCardinality ?maxC .
+    }
+    BIND (CONCAT(IF(bound(?minC),STR(?minC),"0"),":",IF(bound(?maxC),STR(?maxC),"n")) AS ?entry_badge) .
+    
+    {
+        ?attribute rdf:type/rdfs:subClassOf* owl:DatatypeProperty .
+    } UNION {
+        ?attribute rdf:type/rdfs:subClassOf* owl:ObjectProperty .
+        ?attribute rdfs:range/rdfs:subClassOf base:EnumerationType .
+    } UNION {
+        ?attribute rdf:type/rdfs:subClassOf* owl:ObjectProperty .
+        ?attribute rdfs:range base:QuantityValue .
+    } UNION {
+        ?restriction owl:onProperty ?attribute .
+        FILTER (?attribute IN (skos:notation , skos:prefLabel , rdf:value , skos:definition)) .
+    } UNION {
+        ?attribute rdf:type owl:ObjectProperty .
+        ?attribute rdfs:range ?xsdDatatype .
+        FILTER (STRSTARTS(str(?xsdDatatype),"http://www.w3.org/2001/XMLSchema#")) .
+    }
+    BIND(STRAFTER(str(?xsdDatatype),"http://www.w3.org/2001/XMLSchema#") AS ?datatypeText) .
+    
+    BIND (?attribute AS ?entry) .
+    BIND (?attribute AS ?entry_iri) .
+
+    # get name
+    OPTIONAL { ?attribute skos:prefLabel ?attributeLabel . }
+    BIND (IF (?attribute IN (skos:prefLabel), "name", 
+          IF (?attribute IN (skos:notation), "code", ?empty))
+          AS ?attributeRecognized) .
+    BIND (IF(contains(str(?entry),"#"),strafter(str(?entry), "#"),REPLACE(str(?entry),"(.*)[//]","")) AS ?entryLocalname) .
+    BIND (COALESCE(?attributeLabel, ?attributeRecognized, ?entryLocalname) AS ?entryName) .
+    BIND (IF(BOUND(?unitText),CONCAT(?entryName," [unit: ", ?unitText,"]"),IF(BOUND(?datatypeText),CONCAT(?entryName," [datatype: ", ?datatypeText,"]"),?entryName)) AS ?entry_text) .
+  
+}
+ORDER BY ?entry_text ?entry_iri

@@ -1,0 +1,58 @@
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:      <http://www.w3.org/2002/07/owl#>
+PREFIX skos:     <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?entry_text ?entry_iri ?entry_icon (COUNT(?grandchild) AS ?entry_childCount)
+WHERE {
+
+#########################
+# This query returns the taxonomy children to a parent term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the parent term
+#########################
+
+    {
+        # If activity, do not show taxonomy
+        ?child rdfs:subClassOf ?term_iri .
+        OPTIONAL {
+            ?grandchild rdfs:subClassOf|rdf:type ?child .
+        }
+    } UNION {
+        ?child rdf:type ?term_iri .
+        BIND("a" AS ?specChild) .
+    }
+    
+    FILTER (?child != ?term_iri) .
+    
+    # filter excluding owl:Thing
+    FILTER (?child != owl:Thing) .
+    
+    # filter excluding blank nodes
+    FILTER (isURI(?child)) .
+
+    # filter excluding Restrictions as nodes
+    FILTER NOT EXISTS {
+        ?child rdf:type/rdfs:subClassOf* owl:Restriction .
+    }
+    
+    BIND (?child AS ?entry_iri) .
+    BIND (IF(!BOUND(?specChild), "icon-term-type","") AS ?entry_icon) .
+    
+    # get child name
+    OPTIONAL {
+        ?child skos:prefLabel ?childLabel .
+        FILTER (LANG(?childLabel)="en"||LANG(?childLabel)="") .
+    }
+    OPTIONAL {
+        ?child skos:prefLabel ?dutchLabel .
+        FILTER(LANG(?dutchLabel) = "nl") .
+    }
+    BIND (IF(contains(str(?child),"#"),strafter(str(?child), "#"),REPLACE(str(?child),"(.*)[//]","")) AS ?childLocalname) .
+    BIND (COALESCE(STR(?childLabel), STR(?dutchLabel), ?childLocalname) AS ?entry_text) .
+    
+    
+}
+GROUP BY ?entry_text ?entry_iri ?entry_icon
+ORDER BY ?entry_text ?entry_iri ?entry_childCount
