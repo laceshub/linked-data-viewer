@@ -1,8 +1,8 @@
 # Laces - Linked Data Viewer
-
 ## Getting Started
 
 These are the fundamental technologies used in the infrastructure of the application:
+
 * [Typescript](https://www.typescriptlang.org/) is a superset of JavaScript.
 * [React](https://facebook.github.io/react/) is a UI rendering library.
 * [Less](http://lesscss.org/) is a CSS preprocessor.
@@ -16,9 +16,12 @@ These are the fundamental technologies used in the infrastructure of the applica
   faster installs and consistent versioning thanks to `yarn.lock` file.
 
 Next to these technologies, the following frameworks were used for visualization purposes:
+
 * [Reactstrap](https://reactstrap.github.io/) is a React library for working with [Bootstrap](https://getbootstrap.com/) front-end components. (MIT license)
 * [Flag-icon-css](https://github.com/lipis/flag-icon-css) is used for flag images. (MIT license)
 * [Open Iconic](https://useiconic.com/open/) is used for icons used in tabs. (MIT license)
+
+## Usage
 
 To be able to build the application you should have NodeJS (with npm)
 and Yarn installed (latest stable versions are preferrable) and be available in your path.
@@ -31,14 +34,14 @@ Then different commands are responsible for following tasks:
 | `npm start` or `yarn start`     | Executes webpack dev web server on `8091` port where you can open the application.                                                          |
 | `npm test` or `yarn test`       | Executes [Karma](https://karma-runner.github.io/) test runner to run unit tests and also generates code coverage report in `reports` folder |
 
-### IDE
+## IDE
 
 It is recommended to use [VSCode](https://code.visualstudio.com/)
 as source code editor and debugger. It is lightweight, free to use and open
 source text editor initially forked from [Atom](https://atom.io/) and
 maintained by Microsoft. Main features are out of the box Typescript support.
 
-#### Debugging in your web browser
+### Debugging in your web browser
 
 Thanks to enabled source maps it is possible to debug your typescript
 code in browser. To do that please open developer tools panel,
@@ -48,7 +51,7 @@ with files structure. Please expand this path:
 You should see the source code of `app.tsx` entry point of application.
 You can put break points in it and debug the same way as usual javascript.
 
-#### Debugging in Visual Studio Code
+### Debugging in Visual Studio Code
 
 Embedded debugger is one of the greatest features of VSCode.
 The projectalready has a debugger configuration in `.vscode\launch.json`.
@@ -58,7 +61,7 @@ which requires having the following extension installed: [Debugger for Chrome](h
 with remote debugger enabled on port `9222`. More info about this extension usage and
 configuration is avalaible on [github page](https://github.com/Microsoft/vscode-chrome-debug).
 
-### Directory structure
+## Directory structure
 
 * `config`
     * `config.schema.json` - Configuration file [Json schema](https://spacetelescope.github.io/understanding-json-schema/index.html).
@@ -84,3 +87,4 @@ configuration is avalaible on [github page](https://github.com/Microsoft/vscode-
 * `static` - Static content folder copied directly to the web-server. Contains fonts, images and CSS styles.
 * `tools`
     * `make-war.js` - Creates a WAR file ready to be deployed to a Tomcat web server.
+* `dist` - Application build results, both HTML and a .war file

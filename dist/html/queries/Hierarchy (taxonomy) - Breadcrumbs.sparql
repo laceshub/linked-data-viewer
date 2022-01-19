@@ -1,0 +1,35 @@
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+
+###################################
+# This query returns the taxonomy breadcrumbs to a term
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+###################################
+
+SELECT ?entry_iri ?entry_text ?entry_icon (COUNT(DISTINCT ?ancestor) AS ?entry_ancestorDistance)
+WHERE {
+  # find classes
+  ?term_iri wdt:P279* ?class .
+  
+  # restrict to taxonomy w/ root node wd:Q99527517;
+  # (endpoint yields time out on pattern: ?class wdt:P279* wd:Q99527517 .)
+  ?class wdt:P279+ ?superClass .
+  FILTER (STRENDS(STR(?superClass), "Q99527517")) .
+  
+  # get name of class
+  ?class rdfs:label ?classLabel .
+  FILTER (LANG(?classLabel) = "en")
+  
+  BIND (?class AS ?entry_iri) .
+  BIND (?classLabel AS ?entry_text) .
+  BIND ("icon-term-type" AS ?entry_icon) .
+
+  OPTIONAL {
+    ?class wdt:P279* ?ancestor .
+  }
+}
+GROUP BY ?entry_iri ?entry_text ?entry_icon
+ORDER BY ASC(?entry_ancestorDistance)

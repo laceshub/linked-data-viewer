@@ -2,7 +2,6 @@ reports/
 .atl-cache*/
 node/
 node_modules/
-dist/
 yarn-error.log
 .sonar/
 .settings/

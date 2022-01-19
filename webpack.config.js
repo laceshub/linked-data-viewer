@@ -7,11 +7,14 @@ const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPl
 const GitRevisionPlugin = require("git-revision-webpack-plugin");
 const HtmlReplaceWebpackPlugin = require("html-replace-webpack-plugin");
 
+const package = require("./package.json");
+
 const appGitVersion = new GitRevisionPlugin().version();
 
 module.exports = function (env) {
     env = env || {};
-    const version = env.version || "3.4.1-" + new Date().toISOString().replace(/-|:|\.|T|Z/gi, "");
+    const version =
+        env.version || package.version + "-" + new Date().toISOString().replace(/-|:|\.|T|Z/gi, "");
     const isProduction = !!env.prod;
     const isUnitTests = !!env.tests;
     const isDevBuild = !isProduction;
@@ -19,11 +22,11 @@ module.exports = function (env) {
     const configDirectory = env.configDir || "resources/config/default";
 
     console.log("Building app bundle with webpack");
-    console.log("    version:" + version);
-    console.log("    production mode:" + isProduction);
-    console.log("    tests:" + isUnitTests);
-    console.log("    es5:" + isEs5);
-    console.log("    configDirectory:" + configDirectory);
+    console.log("    version: " + version);
+    console.log("    production mode: " + isProduction);
+    console.log("    tests: " + isUnitTests);
+    console.log("    es5: " + isEs5);
+    console.log("    configDirectory: " + configDirectory);
 
     const webpackConfig = {
         mode: isProduction ? "production" : "development",
@@ -37,7 +40,7 @@ module.exports = function (env) {
         },
 
         output: {
-            path: path.join(__dirname, "/dist")
+            path: path.join(__dirname, "/dist/html")
         },
 
         optimization: {
@@ -119,7 +122,7 @@ module.exports = function (env) {
         stats: { modules: false },
         performance: { hints: false },
         devServer: {
-            contentBase: path.join(__dirname, "dist"),
+            contentBase: path.join(__dirname, "dist/html"),
             port: isUnitTests ? 8092 : 8091
         },
         devtool: isDevBuild ? "eval-source-map" : false

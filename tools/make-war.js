@@ -1,12 +1,16 @@
 var pjson = require("../package.json");
 console.log("building WAR package: " + pjson.name);
+
+var version = pjson.version + "-" + new Date().toISOString().replace(/-|:|\.|T|Z/gi, "");
+console.log(" ✔  version: " + version);
+
 let currentDir = process.cwd();
-console.log("current dir is " + currentDir);
+console.log(" ✔  current dir: " + currentDir);
 
 var fs = require("fs");
 var distFolder = currentDir + "/dist";
-var warFileName = pjson.name + ".war";
-var webInfFolder = distFolder + "/WEB-INF";
+var warFileName = pjson.name + "-" + version + ".war";
+var webInfFolder = distFolder + "/html/WEB-INF";
 
 if (!fs.existsSync(webInfFolder)) {
     fs.mkdirSync(webInfFolder);
@@ -36,8 +40,8 @@ var webXmlFileContent = `<?xml version="1.0" encoding="ISO-8859-1"?>
   version="3.0"
   metadata-complete="true">
 
-  <display-name>${pjson.description || pjson.name}</display-name>
-  <description>${pjson.description || pjson.name}</description>
+  <display-name>${pjson.description || pjson.name} v${version}</display-name>
+  <description>${pjson.description || pjson.name} v${version}</description>
 </web-app>
 `;
 var webXmlFileName = webInfFolder + "/web.xml";
@@ -50,12 +54,12 @@ var archiver = require("archiver");
 var archive = archiver("zip");
 
 fileOutput.on("close", function () {
-    console.log(archive.pointer() + " total bytes");
+    console.log("Total size is " + archive.pointer() + " bytes");
 });
 
 archive.pipe(fileOutput);
 archive.glob("**/!(*.map|*.war)", {
-    cwd: distFolder
+    cwd: distFolder + "/html"
 });
 
 archive.on("error", function (err) {
@@ -69,15 +73,13 @@ archive.on("finish", function (err) {
 
     let newFileName = distFolder + "/" + warFileName;
     fs.renameSync(fileName, newFileName);
-    console.log("created successfully " + newFileName);
+    console.log(" ✔  created successfully " + newFileName);
 
-    console.log("delete web.xml");
     fs.unlinkSync(webXmlFileName);
-    console.log("...ok");
+    console.log(" ✔  deleted web.xml");
 
-    console.log("delete WEB-INF");
     fs.rmdirSync(webInfFolder);
-    console.log("...ok");
+    console.log(" ✔  deleted WEB-INF/");
 });
 
 archive.finalize();

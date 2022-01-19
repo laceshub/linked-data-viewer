@@ -1,0 +1,46 @@
+/* custom icons */
+.icon-term-type {
+    display: inline-block;
+    font-family: "Icons";
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    vertical-align: middle;
+    width: 10px;
+    height: 10px;
+    background: url(images/icon-term-type.svg);
+    background-repeat: no-repeat;
+    background-size: 10px 10px;
+}
+
+/* These overrides for flag-icon-css are based on MIT licensed code
+   from the project gae-init-babel @ https://github.com/gae-init/gae-init-babel/ */
+.flag-icon {
+    box-shadow: 1px 1px 1px grey;
+    width: 13.3333333px !important;
+    height: 10px !important;
+    line-height: 10px !important;
+}
+
+.flag-icon-en {
+    background-image: url("flag-icon-css/flags/4x3/gb.svg");
+}
+.flag-icon-el {
+    background-image: url("flag-icon-css/flags/4x3/gr.svg");
+}
+.copy-document-icon {
+    height: 14px;
+    width: 14px;
+    border: none;
+    margin-left: 5px;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-color: white;
+    background-image: url("images/outline-file_copy-24px.svg");
+}
+
+.copy-document-icon:focus {
+    outline: 0;
+}

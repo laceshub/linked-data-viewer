@@ -1,0 +1,24 @@
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+
+#########################
+# This query returns the name and IRI to a term.
+#
+# INPUT:
+#   ?term_iri: The IRI of the term
+#########################
+
+SELECT ?entry_text ?entry_iri
+WHERE {
+  ?term_iri ?p ?o .
+  
+  OPTIONAL {
+    ?term_iri rdfs:label ?label .
+    FILTER (lang(?label) = "en") .
+  }
+  
+  BIND (?term_iri AS ?entry_iri) .
+  BIND (COALESCE(?label, REPLACE(str(?object),"(.*)[//#]","")) AS ?entry_text) .
+}
+LIMIT 1
