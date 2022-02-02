@@ -314,6 +314,7 @@ export class SparqlMap extends React.Component<ISparqlMapProps, ISparqlMapState>
             divViewURI.className = "mapboxPopup-divInfo";
             divViewURI.innerHTML =
                 "<a class='oi oi-info' href='" +
+                "#" +
                 NavigateService.getBrowseLink(properties.uri) +
                 "'></a>";
             popup.appendChild(divViewURI);

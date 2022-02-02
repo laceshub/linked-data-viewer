@@ -18,7 +18,7 @@ export class NavigateService {
     }
 
     static getActionLinkWithParams(action: string, params?: URLSearchParams): string {
-        return "#" + action + (params ? "?" + params.toString() : "");
+        return action + (params ? "?" + params.toString() : "");
     }
 
     static retainOnly(params: URLSearchParams | undefined, retainKeys: string[]): URLSearchParams {
