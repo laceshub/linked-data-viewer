@@ -38,7 +38,11 @@ export class Breadcrumbs extends React.Component<IBreadcrumbsProps, IBreadcrumbs
     }
 
     async UNSAFE_componentWillReceiveProps(nextProps: IBreadcrumbsProps) {
-        if (this.props.path != nextProps.path || !nextProps.path) {
+        if (
+            (this.props.path != nextProps.path || !nextProps.path) &&
+            (!this.state.path ||
+                this.state.path[this.state.path.length - 1].iri != nextProps.currentTerm?.iri)
+        ) {
             await this.loadData(nextProps);
         }
     }
@@ -46,7 +50,10 @@ export class Breadcrumbs extends React.Component<IBreadcrumbsProps, IBreadcrumbs
     async loadData(props: IBreadcrumbsProps): Promise<void> {
         const term = props.currentTerm;
         const uri = term ? term.iri : undefined;
-        let path = props.path;
+        let path =
+            this.state.path && this.state.path[this.state.path.length - 1].iri == uri
+                ? this.state.path
+                : props.path;
         if (!path && uri) {
             this.setState({ isLoading: true });
             const result = await this.sparqlExecutor.execute(props.config.queryBreadcrumbs, [
@@ -59,6 +66,7 @@ export class Breadcrumbs extends React.Component<IBreadcrumbsProps, IBreadcrumbs
 
             const records = SparqlResultParser.parse(result);
             path = records.map((rec) => TermBuilder.parseFromSparqlRecord(rec));
+            path = path.length == 0 && term ? [term] : path;
         }
 
         this.setState({
@@ -94,7 +102,7 @@ export class Breadcrumbs extends React.Component<IBreadcrumbsProps, IBreadcrumbs
             breadcrumbs.push(
                 <BreadcrumbItem key={currentIndex}>
                     <TextItem
-                        text={term.name}
+                        text={term.name || Term.getLocalname(term.iri)}
                         link={term.iri}
                         icon={term.icon}
                         highlighted={Term.isSame(term, this.props.currentTerm)}

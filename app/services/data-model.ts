@@ -43,6 +43,10 @@ export class Term {
         }
         return false;
     }
+
+    public static getLocalname(iri: string) {
+        return iri.replace(/.*[\/#:]/, "");
+    }
 }
 
 export class TermBuilder {
@@ -54,11 +58,9 @@ export class TermBuilder {
      * "group_text" etc. instead.
      */
     public static parseFromSparqlRecord(record: SparqlRecord, using: string = "entry"): ITerm {
-        const object: ITerm = {
-            name: getRecordValue(record, using + "_text"),
-            iri: getRecordValue(record, using + "_iri"),
-            icon: getRecordValue(record, using + "_icon")
-        };
-        return object;
+        const iri = getRecordValue(record, using + "_iri");
+        const name = getRecordValue(record, using + "_text") || Term.getLocalname(iri);
+        const icon = getRecordValue(record, using + "_icon");
+        return { name, iri, icon };
     }
 }

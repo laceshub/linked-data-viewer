@@ -16,6 +16,7 @@ import { parseUrlQuery } from "app/utils/syntax-helpers";
 import { SparqlResultParser } from "../../services/infrastructure/sparql-result-parser";
 import { ISparqlExecutor } from "../../services/infrastructure/sparql-executor";
 import { Resizable, Enable } from "re-resizable";
+import { Term } from "app/services/data-model";
 
 export interface IBrowsePageState {
     currentTerm?: ITerm;
@@ -73,7 +74,7 @@ export class BrowsePage extends React.Component<IBrowsePageProps, IBrowsePageSta
                 const updatedTerm =
                     result && result.length > 0
                         ? TermBuilder.parseFromSparqlRecord(result[0])
-                        : undefined;
+                        : { iri: term.iri, name: Term.getLocalname(term.iri) };
                 if (updatedTerm && updatedTerm.iri === term.iri) {
                     this.setState({ currentTerm: updatedTerm });
                 }
