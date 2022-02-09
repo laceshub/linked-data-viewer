@@ -3,7 +3,7 @@
 
 import * as React from "react";
 
-import { Spinner } from "reactstrap";
+import { Input, Spinner } from "reactstrap";
 import { isEqual } from "lodash";
 import { resolveInject } from "app/di";
 import {
@@ -28,6 +28,8 @@ export interface ISparqlMapState {
     isLoading: boolean;
     data?: FeatureCollections;
     error?: Error;
+    accessToken?: string;
+    accessTokenInput?: string;
 }
 
 export interface ISparqlMapProps {
@@ -51,6 +53,7 @@ const GEOMETRY_TYPES = [
     "Polygon",
     "MultiPolygon"
 ];
+const LS_ACCESSTOKEN = "mapbox:accessToken";
 
 /*
  * Component that represents a geospatial map.
@@ -64,7 +67,15 @@ export class SparqlMap extends React.Component<ISparqlMapProps, ISparqlMapState>
         this.state = {
             isLoading: true
         };
+        this.updateConfigAccessToken();
         this.styleRefs = [React.createRef(), React.createRef(), React.createRef()];
+    }
+
+    updateConfigAccessToken() {
+        if (!this.validAccessToken(this.props.config.accessToken)) {
+            this.props.config.accessToken =
+                this.state.accessToken || localStorage.getItem(LS_ACCESSTOKEN) || undefined;
+        }
     }
 
     async componentDidMount() {
@@ -113,8 +124,52 @@ export class SparqlMap extends React.Component<ISparqlMapProps, ISparqlMapState>
     }
 
     renderMap() {
+        const accessToken = this.props.config.accessToken || this.state.accessToken;
+        if (!accessToken) {
+            return (
+                <div style={{ margin: "2em", justifyContent: "center", textAlign: "center" }}>
+                    <Input
+                        id="accessToken"
+                        name="accessToken"
+                        placeholder="Access token Mapbox"
+                        style={{ textAlign: "center" }}
+                        onChange={(event) => {
+                            this.setState({ accessTokenInput: event.target.value });
+                        }}
+                        onKeyPress={(event) => {
+                            if (event.key === "Enter") {
+                                const newToken = this.state.accessTokenInput;
+                                localStorage.setItem(LS_ACCESSTOKEN, newToken || "");
+                                this.setState({ accessToken: newToken });
+                            }
+                        }}
+                    />
+                    <p style={{ marginTop: "1em" }}>
+                        Use of this map requires an{" "}
+                        <a
+                            href="https://docs.mapbox.com/help/glossary/access-token/"
+                            target="_blank"
+                        >
+                            access token
+                        </a>{" "}
+                        from Mapbox. Once you have an access token, add it in the box above and
+                        press Enter. The token will be stored locally, in your own browser, and used
+                        for viewing content.
+                    </p>
+                </div>
+            );
+        }
+
         return (
-            <div id={this.createDivIdMap()} className="mapboxMap">
+            <div
+                id={this.createDivIdMap()}
+                className="mapboxMap"
+                onLoad={() => {
+                    if (this.state.data) {
+                        this.loadMap();
+                    }
+                }}
+            >
                 <link
                     href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css"
                     rel="stylesheet"
@@ -169,9 +224,11 @@ export class SparqlMap extends React.Component<ISparqlMapProps, ISparqlMapState>
         const config = this.props.config;
         config.style = DEFAULT_STYLE;
         config.container = this.createDivIdMap();
+        this.updateConfigAccessToken();
 
         if (!config.accessToken) {
-            console.error("Cannot load map. No access token has been provided for Mapbox use.");
+            console.error("Cannot load map. No access token has been provided for Mapbox.");
+            return;
         }
 
         const map = new Map(config);
@@ -453,5 +510,9 @@ export class SparqlMap extends React.Component<ISparqlMapProps, ISparqlMapState>
     isEmpty(): boolean {
         const featureCollections = this.state.data;
         return !(featureCollections && Object.keys(featureCollections).length > 0);
+    }
+
+    validAccessToken(token: string | undefined | null): boolean {
+        return token && token.includes(".") ? true : false;
     }
 }
