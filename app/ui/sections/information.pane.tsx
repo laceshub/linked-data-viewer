@@ -11,7 +11,7 @@ import { TabMap } from "app/ui/tabs/tab.map";
 import { TabInfo } from "app/ui/tabs/tab.info";
 import { TabInstances } from "app/ui/tabs/tab.instances";
 import { TabRelations } from "app/ui/tabs/tab.relations";
-import { ITerm } from "app/services/data-model";
+import { ITerm, Term } from "app/services/data-model";
 
 interface IInformationPaneState {
     activeTabId: string | undefined;
@@ -155,7 +155,7 @@ export class InformationPane extends React.Component<IInformationPaneProps, IInf
         const tabs: JSX.Element[] = this.getTabs();
         const activeTabId = this.state.activeTabId;
 
-        if (!term || !term.iri || !term.name) {
+        if (!term || !term.iri) {
             return null;
         }
 
@@ -163,8 +163,8 @@ export class InformationPane extends React.Component<IInformationPaneProps, IInf
             <section className="rounded border border-dark">
                 <div>
                     <Nav tabs>
-                        <h3 className="mr-auto">{term.name}</h3>
-                        {tabs.map((tab: JSX.Element, itab: number) => {
+                        <h3 className="mr-auto">{term.name || Term.getLocalname(term.iri)}</h3>
+                        {tabs.map((tab: JSX.Element) => {
                             const tabId = tab.props.config.id;
                             const active = tabId == activeTabId;
                             const onClick = () => {

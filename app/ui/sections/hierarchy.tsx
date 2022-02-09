@@ -10,7 +10,7 @@ import {
     TreeDataLoaderService,
     TreeRecord
 } from "app/services/data-loader/tree-data-loader.service";
-import { ITerm, TermBuilder } from "app/services/data-model";
+import { ITerm, Term, TermBuilder } from "app/services/data-model";
 import { ISparqlExecutor } from "app/services/infrastructure/sparql-executor";
 import { ErrorMessage } from "app/ui/_generic/error-message";
 import { TextItem } from "app/ui/elements/text-item";
@@ -95,7 +95,7 @@ export class Hierarchy extends React.Component<IHierarchyProps, IHierarchyState>
                         <td key={"cell_" + irow + "_" + 0}>
                             {this.renderStubsAndExpander(record)}
                             <TextItem
-                                text={term.name}
+                                text={term.name || Term.getLocalname(term.iri)}
                                 link={term.iri}
                                 icon={term.icon}
                                 highlighted={
