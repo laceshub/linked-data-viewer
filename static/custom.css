@@ -31,6 +31,29 @@ section {
     background-color: #ffffff;
     padding: 15px 15px;
 }
+.hierarchy-column {
+    display: flex;
+    margin: 0.5em;
+    margin-left: 1em;
+    border-right: 1px solid #dee2e6;
+    min-height: calc(100vh - 155px);
+    max-height: calc(100vh - 155px);
+}
+.content-column {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin: 0.5em;
+    margin-right: 1em;
+    min-height: calc(100vh - 155px);
+    max-height: calc(100vh - 155px);
+    overflow: scroll;
+}
+.search-column {
+    min-height: calc(100vh - 155px);
+    max-height: calc(100vh - 155px);
+    overflow: scroll;
+}
 
 /* titlebar */
 .navbar-fixed-top .navbar-collapse {
@@ -57,6 +80,28 @@ nav.navbar {
 .ex-app-logo {
     background: url("images/laces_logo.svg") no-repeat 50%;
     background-size: contain;
+}
+
+/* tabs */
+.tab-pane .sparql-listing-group {
+    font-size: initial;
+    font-variant-caps: petite-caps;
+}
+.tab-pane .sparql-listing-entry {
+    border: none;
+    padding: 0.25rem 1.25rem;
+}
+.nav-tabs .nav-link {
+    position: relative;
+    top: 1px;
+}
+.nav-tabs .nav-link.active {
+    border-bottom: 1px solid white;
+}
+
+/* links */
+a {
+    color: black;
 }
 
 /* cursor */
