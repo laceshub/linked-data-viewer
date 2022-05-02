@@ -160,7 +160,7 @@ export class InformationPane extends React.Component<IInformationPaneProps, IInf
         }
 
         return (
-            <section className="rounded border border-dark">
+            <section>
                 <div>
                     <Nav tabs>
                         <h3 className="mr-auto">{term.name || Term.getLocalname(term.iri)}</h3>

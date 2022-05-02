@@ -44,7 +44,7 @@ export class SearchResults extends React.Component<IComponentProps> {
         const matches = results.matches ? results.matches : [];
 
         return (
-            <section className="rounded border border-dark">
+            <section className="search-column">
                 <h3 className="mr-auto">Search results for ‘{results.key}’</h3>
 
                 <div>

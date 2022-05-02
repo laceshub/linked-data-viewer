@@ -161,13 +161,7 @@ export class BrowsePage extends React.Component<IBrowsePageProps, IBrowsePageSta
                         <Resizable
                             enable={resizableRights}
                             defaultSize={{ width: "250px", height: "auto" }}
-                            maxHeight="75vh"
-                            className="rounded border border-dark"
-                            style={{
-                                display: "flex",
-                                margin: "0.5em",
-                                marginLeft: "1em"
-                            }}
+                            className="hierarchy-column"
                         >
                             <Hierarchy
                                 config={this.appConfig.hierarchies[0]}
@@ -176,15 +170,7 @@ export class BrowsePage extends React.Component<IBrowsePageProps, IBrowsePageSta
                             />
                         </Resizable>
                         <div className="clearfix visible-xs" />
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                flexGrow: 1,
-                                margin: "0.5em",
-                                marginRight: "1em"
-                            }}
-                        >
+                        <div className="content-column">
                             <Breadcrumbs
                                 config={this.appConfig.hierarchies[0]}
                                 currentTerm={this.state.currentTerm}
