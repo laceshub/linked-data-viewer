@@ -21,6 +21,7 @@ import { Term } from "app/services/data-model";
 export interface IBrowsePageState {
     currentTerm?: ITerm;
     currentHierarchyPath?: ITerm[];
+    hierarchyColumnWidth: number;
 }
 
 interface RouteParams {}
@@ -37,6 +38,7 @@ export interface IBrowsePageProps extends RouteComponentProps<RouteParams> {}
  */
 export class BrowsePage extends React.Component<IBrowsePageProps, IBrowsePageState> {
     public static PATHNAME = "/view";
+    static DEFAULT_HIERARCHY_COLUMN_WIDTH = 350;
 
     private appConfig = resolveInject(IAppConfigProvider).config;
     private sparqlExecutor = resolveInject(ISparqlExecutor);
@@ -49,9 +51,17 @@ export class BrowsePage extends React.Component<IBrowsePageProps, IBrowsePageSta
         super(props);
         const uri = this.getUri(this.props);
         const term = this.getCurrentTermFromUri(uri);
+        const hierarchyColumnWidthLS =
+            typeof Storage === "undefined"
+                ? undefined
+                : localStorage.getItem("ldviewer:ui:hierarchy-column-width");
+        const hierarchyColumnWidthInitial = hierarchyColumnWidthLS
+            ? Number(hierarchyColumnWidthLS)
+            : BrowsePage.DEFAULT_HIERARCHY_COLUMN_WIDTH;
 
         this.state = {
-            currentTerm: term
+            currentTerm: term,
+            hierarchyColumnWidth: hierarchyColumnWidthInitial
         };
     }
 
@@ -143,6 +153,7 @@ export class BrowsePage extends React.Component<IBrowsePageProps, IBrowsePageSta
     };
 
     render(): JSX.Element {
+        const hierarchyColumnWidth = this.state.hierarchyColumnWidth;
         const resizableRights: Enable = {
             top: false,
             right: true,
@@ -160,8 +171,19 @@ export class BrowsePage extends React.Component<IBrowsePageProps, IBrowsePageSta
                     <Row style={{ flexWrap: "nowrap" }}>
                         <Resizable
                             enable={resizableRights}
-                            defaultSize={{ width: "250px", height: "auto" }}
+                            defaultSize={{ width: hierarchyColumnWidth + "px", height: "auto" }}
                             className="hierarchy-column"
+                            onResizeStop={(e, direction, ref, d) => {
+                                const hierarchyColumnWidth =
+                                    this.state.hierarchyColumnWidth + d.width;
+                                if (typeof Storage !== "undefined") {
+                                    localStorage.setItem(
+                                        "ldviewer:ui:hierarchy-column-width",
+                                        "" + hierarchyColumnWidth
+                                    );
+                                }
+                                this.setState({ hierarchyColumnWidth });
+                            }}
                         >
                             <Hierarchy
                                 config={this.appConfig.hierarchies[0]}
